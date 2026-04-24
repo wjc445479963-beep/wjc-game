@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>三千道藏王大师</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #0d0703; color: #e5d6b0; font-family: 'KaiTi', '楷体', 'Noto Serif SC', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 16px; }
+        .game-container { max-width: 740px; width: 100%; background: linear-gradient(135deg, #2d2218 0%, #1a120a 100%); border: 3px solid #b89a50; border-radius: 32px; padding: 20px; box-shadow: 0 0 40px #b44c0e33; position: relative; }
+        .daotong-icon { position: absolute; top: 12px; right: 20px; background: #2f4530; border: 2px solid #5a8fca; border-radius: 50%; width: 56px; height: 56px; text-align: center; line-height: 56px; font-size: 1.8rem; color: #aaddff; z-index: 10; }
+        .daotong-bubble { position: absolute; top: 76px; right: 20px; background: #1e2f1e; border: 1px solid #5a8fca; border-radius: 12px; padding: 10px; width: 200px; color: #ccddcc; font-size: 0.8rem; z-index: 10; display: none; }
+        .daozang-scroll { position: absolute; top: 20px; right: 86px; background: #3e2e1a; border: 1px solid #b89a50; border-radius: 50%; width: 32px; height: 32px; text-align: center; line-height: 32px; font-size: 1rem; color: #ffbb4d; z-index: 10; cursor: default; }
+        .daozang-scroll:hover .daozang-tooltip { display: block; }
+        .daozang-tooltip { display: none; position: absolute; top: 40px; right: 0; width: 260px; background: #1e140b; color: #ffdd99; border: 1px solid #b89a50; border-radius: 8px; padding: 10px; font-size: 0.8rem; z-index: 20; }
+        h1 { text-align: center; color: #ffbb4d; letter-spacing: 4px; font-size: 2rem; margin: 10px 0 0; }
+        .scene-title { text-align: center; font-size: 1.1rem; color: #ccaa77; margin: 8px 0; }
+        .status-panel { display: flex; justify-content: space-around; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 16px; font-size: 0.95rem; }
+        .bar { background: #3a2a1a; height: 20px; border-radius: 10px; overflow: hidden; margin: 6px 0; }
+        .bar-fill { height: 100%; width: 100%; transition: width 0.3s; }
+        .health { background: #c0392b; }
+        .skills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 16px 0; }
+        .skill-btn { background: #3e2e1a; border: 2px solid #b89a50; color: #ffdd99; padding: 10px 14px; border-radius: 30px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: inherit; position: relative; text-align: center; min-width: 90px; }
+        .skill-btn:active { background: #5e4426; border-color: #ffbb4d; }
+        .skill-btn:disabled { opacity: 0.5; pointer-events: none; }
+        .skill-btn .skill-name { font-weight: bold; display: block; }
+        .skill-btn .skill-desc { font-size: 0.7rem; color: #ccaa77; display: block; margin-top: 2px; }
+        .skill-btn .cd-badge { position: absolute; top: -6px; right: -6px; background: #c0392b; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; text-align: center; line-height: 20px; display: none; }
+        .skill-btn .tooltip { display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); width: 260px; background: #1e140b; color: #ffdd99; border: 1px solid #b89a50; border-radius: 8px; padding: 10px; font-size: 0.75rem; z-index: 30; }
+        .skill-btn:hover .tooltip { display: block; }
+        .log { background: #100a04; border-radius: 16px; padding: 12px; height: 200px; overflow-y: auto; font-size: 0.85rem; color: #ccbb99; margin-top: 16px; border: 1px solid #5e4426; }
+        .log .hint { color: #aaddaa; }
+        .story-box { background: #1e140b; border: 2px solid #ffbb4d; border-radius: 16px; padding: 14px; margin-top: 12px; color: #ffeedd; font-style: italic; display: none; }
+        .quiz-panel { background: #1e140b; border: 2px solid #b89a50; border-radius: 16px; padding: 14px; margin: 14px 0; text-align: center; display: none; }
+        .quiz-btn { background: #3e2e1a; border: 2px solid #ffbb4d; color: #ffdd99; padding: 8px 14px; border-radius: 20px; margin: 4px; cursor: pointer; font-size: 0.9rem; }
+        .reset-btn { width: 100%; margin-top: 16px; background: #5e3a1a; border: 2px solid #b89a50; color: #ffdd99; padding: 12px; border-radius: 40px; font-size: 1rem; cursor: pointer; }
+        .school-select { text-align: center; margin: 20px 0; }
+        .school-btn { background: #2d2218; border: 3px solid #b89a50; color: #ffdd99; padding: 16px 20px; border-radius: 40px; font-size: 1.1rem; margin: 8px; cursor: pointer; width: 80%; display: block; margin-left: auto; margin-right: auto; }
+        .school-desc { background: #1e140b; border: 1px solid #b89a50; border-radius: 16px; padding: 12px; margin: 12px 0; color: #ccbb99; font-size: 0.9rem; display: none; }
+        .confirm-school-btn { background: #b89a50; color: #1a0f0a; font-weight: bold; padding: 12px 24px; border-radius: 30px; border: none; margin: 8px; cursor: pointer; display: none; font-size: 1rem; width: 60%; margin-left: auto; margin-right: auto; }
+        .buff-display { display: flex; justify-content: space-around; margin-top: 6px; font-size: 0.8rem; }
+        .buff-display span { background: #3a2a1a; padding: 2px 8px; border-radius: 20px; color: #ccaa77; }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="daotong-icon" id="daotongIcon">🧚</div>
+    <div class="daotong-bubble" id="daotongBubble"></div>
+    <div class="daozang-scroll">📜<div class="daozang-tooltip" id="enemyLore"></div></div>
+    <h1>🌌 三千道藏王大师 🌌</h1>
+    <div id="sceneTitle" class="scene-title"></div>
+
+    <div id="schoolSelection">
+        <p style="font-size:1.6rem; color:#ffbb4d;">🏛️ 择一道门，承其法脉</p>
+        <button class="school-btn" data-school="zhengyi">⚡ 正一道 · 符箓驱邪</button>
+        <button class="school-btn" data-school="quanzhen">☯️ 全真道 · 内丹炼养</button>
+        <button class="school-btn" data-school="maoshan">🌿 茅山宗 · 秘术摄妖</button>
+        <div class="school-desc" id="schoolDesc"></div>
+        <button class="confirm-school-btn" id="confirmSchoolBtn">✨ 拜入此门，开始历劫</button>
+    </div>
+
+    <div id="gameMain" style="display: none;">
+        <div class="status-panel">
+            <div><strong>历劫真君</strong><br>❤️ <span id="playerHp">200</span> / <span id="playerMaxHp">200</span><br>☯️ <span id="playerDao">150</span> / <span id="playerMaxDao">150</span></div>
+            <div><strong id="enemyName">嗔恚魔君</strong><br>❤️ <span id="enemyHp">200</span> / <span id="enemyMaxHp">200</span><br>属性: <span id="enemyElem">火</span></div>
+        </div>
+        <div><div id="playerHpBar" class="bar-fill health" style="width:100%"></div></div>
+        <div><div id="enemyHpBar" class="bar-fill health" style="width:100%"></div></div>
+        <div class="buff-display">
+            <span>🌿 生机: <span id="shengJiStacks">0</span></span>
+            <span>⛰️ 坤元: <span id="kunYuanStacks">0</span></span>
+            <span>⚡ 破印: <span id="poYinTurns">0</span>回合</span>
+        </div>
+
+        <div class="skills" id="skillPanel"></div>
+
+        <div class="quiz-panel" id="quizPanel">
+            <p id="quizQuestion"></p>
+            <div id="quizOptions"></div>
+        </div>
+
+        <div class="log" id="logBox"></div>
+        <div class="story-box" id="storyBox"></div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn" style="display: none;">🔄 重选宗派</button>
+</div>
+
+<script>
+    (function(){
+        const DAO_QUESTIONS = [
+            { question: "《道德经》“道可道，非常道”。第二个“道”字的意思是？", options: [{text:"A. 道路", isCorrect:false},{text:"B. 言说、表述", isCorrect:true},{text:"C. 道理", isCorrect:false},{text:"D. 引导", isCorrect:false}], source:"《道德真经》" },
+            { question: "道教认为天地万物及人体生命皆生于混沌之气，其顺序是？", options: [{text:"A. 气生精，精生神", isCorrect:true},{text:"B. 神生气，气生精", isCorrect:false},{text:"C. 精生气，气生神", isCorrect:false},{text:"D. 气生神，神生精", isCorrect:false}], source:"《太平圣君秘旨》" },
+            { question: "《清静经》核心主旨？", options: [{text:"A. 长生久视之道", isCorrect:false},{text:"B. 遣欲入静，澄心见性", isCorrect:true},{text:"C. 呼风唤雨，驱邪缚魅", isCorrect:false},{text:"D. 五行生克，禳灾度厄", isCorrect:false}], source:"《太上老君说常清静经》" },
+            { question: "《北斗经》载，礼拜北斗可？", options: [{text:"A. 延长寿命", isCorrect:false},{text:"B. 消灾解厄", isCorrect:true},{text:"C. 呼风唤雨", isCorrect:false},{text:"D. 点石成金", isCorrect:false}], source:"《太上玄灵北斗本命延生真经》" },
+            { question: "《黄庭经》所言“黄庭”位于？", options: [{text:"A. 头部", isCorrect:false},{text:"B. 胸中", isCorrect:false},{text:"C. 脐内三寸", isCorrect:true},{text:"D. 脚底", isCorrect:false}], source:"《太上黄庭内景玉经》" }
+        ];
+
+        const COMMON_SKILLS = [
+            { key:'taiqing', name:'太清神雷', elem:0, desc:'木·少阳 · 叠生机', detail:'叠加1层「生机」，每层提升火系伤害。木生火，为爆发铺垫。', cost:8, dmg:14, special:'stack_shengji', cd:0, source:'《太上老君说常清静经》' },
+            { key:'shangqing', name:'上清真火', elem:1, desc:'火·少阳 · 引爆生机', detail:'消耗所有「生机」层数，每层额外造成12点伤害。木火相生，一击惊天。', cost:12, dmg:20, special:'consume_shengji', cd:1, source:'《上清大洞真经》' },
+            { key:'yuqing', name:'玉清宝印', elem:2, desc:'土·少阴 · 叠护盾', detail:'伤害并叠加1层「坤元」护盾，每层可吸收5点伤害。土德载物，护身破邪。', cost:6, dmg:9, special:'stack_kunyuan', cd:1, source:'《玉清无极总真文昌大洞仙经》' },
+            { key:'lingbao', name:'灵宝甘露', elem:4, desc:'水·老阴 · 疗伤', detail:'消耗所有「坤元」护盾，每层回复6点生命。掘土得泉，枯木逢春。', cost:10, dmg:0, special:'consume_kunyuan', cd:2, source:'《灵宝无量度人上品妙经》' },
+            { key:'taiyi', name:'太乙金书', elem:3, desc:'金·老阳 · 破防', detail:'驱散自身状态，附加「破印」降敌防御30%持续3回合。金锋斩妄，返本归元。', cost:14, dmg:12, special:'cleanse_debuff', cd:3, source:'《太乙救苦护身妙经》' },
+            { key:'zuowang', name:'自然坐忘', elem:null, desc:'无·坐忘 · 刷新', detail:'消耗10%生命，刷新所有技能冷却。心斋坐忘，万法重启。', cost:0, dmg:0, special:'refresh', cd:5, source:'《庄子·大宗师》' }
+        ];
+
+        const SCHOOLS = {
+            zhengyi: {
+                name: '正一道', desc: '祖天师张道陵立教，以《正一法文》诸阶符箓召神劾鬼。符箓通神，五行克制伤害额外+30%。', passive: '符箓通神',
+                skills: [
+                    { key:'wulei', name:'五雷符', elem:3, desc:'金·雷法 · 斩木', detail:'引五方雷霆，对木属性敌人伤害额外提升80%。金克木，斩妖除邪。', cost:14, dmg:24, special:'gold_boost', cd:2, source:'《正一法文·太上正一五雷符法》' },
+                    { key:'lingguan', name:'灵官诀', elem:1, desc:'火·神咒 · 熔金', detail:'借王灵官神力，对金属性敌人伤害额外提升80%。火克金，焚秽诛妖。', cost:10, dmg:19, special:'fire_boost', cd:1, source:'《太上元阳上帝无始天尊说火车王灵官真经》' },
+                    { key:'zhaoshen', name:'罩身法', elem:2, desc:'土·护体 · 叠盾', detail:'召六丁六甲护体，获得3层「坤元」护盾。厚土载物，坚不可摧。', cost:12, dmg:0, special:'big_shield', cd:3, source:'《上清六甲祈祷秘法》' }
+                ]
+            },
+            quanzhen: {
+                name: '全真道', desc: '重阳祖师倡三教合一，以《立教十五论》明心见性。内丹绵长，每回合恢复5%生命。', passive: '内丹绵长',
+                skills: [
+                    { key:'sanhua', name:'三花聚顶', elem:0, desc:'木·内丹 · 疗伤', detail:'炼精化气聚顶，回复35点生命并净化自身。木德生生，延年益寿。', cost:14, dmg:0, special:'heal_boost', cd:2, source:'《金丹大成集》' },
+                    { key:'wuqi', name:'五气朝元', elem:4, desc:'水·调和 · 净化', detail:'调和五脏之气，净化自身并造成水行伤害。水润下，以柔克刚。', cost:10, dmg:14, special:'cleanse_self', cd:1, source:'《修真十书·五气朝元论》' },
+                    { key:'jindan', name:'金丹诀', elem:null, desc:'被动 · 回血', detail:'每回合自然恢复生命（已包含在被动中），无消耗。', cost:0, dmg:0, special:'passive', cd:0, source:'《悟真篇》' }
+                ]
+            },
+            maoshan: {
+                name: '茅山宗', desc: '三茅真君开山，上清法脉，兼摄《道法会元》秘术。天人感应，召唤物攻击恢复道力。', passive: '天人感应',
+                skills: [
+                    { key:'sadou', name:'撒豆成兵', elem:2, desc:'土·秘术 · 召唤', detail:'召黄巾力士助阵，持续3回合，每回合攻击敌人并为你回复道力。', cost:18, dmg:0, special:'summon', cd:3, source:'《道法会元·太上洞渊辞瘟神咒妙经》' },
+                    { key:'yinshen', name:'隐身咒', elem:null, desc:'无·遁甲 · 闪避', detail:'遁甲隐跡，下回合闪避攻击并回复12点道力。', cost:12, dmg:0, special:'dodge', cd:2, source:'《秘藏通玄变化六阴洞微遁甲真经》' },
+                    { key:'yishan', name:'移山诀', elem:2, desc:'土·重击 · 克水', detail:'拟山岳之重，对水属性敌人伤害额外提升80%。土克水，镇压万邪。', cost:16, dmg:30, special:'earth_boost', cd:3, source:'《茅山志·李仙传》' }
+                ]
+            }
+        };
+
+        const ENEMIES = [
+            { name:'嗔恚魔君', hp:240, elem:1, scene:'红尘浊世', quiz:true, desc:'怒火焚天，嗔恚化形。', lore:'嗔为三毒之一，火属。水克火，或导以木火相生。', story:'💔 魔君形散前，怒目化为两行清泪：“我本一烈性书生，因见世间不平而嗔火攻心。今日方知，水德润下，清净能胜躁火。” 🌊 道童合掌：“上善若水，水善利万物而不争，故几于道。”' },
+            { name:'枯禅邪僧', hp:260, elem:null, scene:'九幽寒穴', quiz:true, desc:'执于顽空，枯木无春。', lore:'邪僧误解“空”义，堕入顽空。雷法破空，金行震醒。', story:'💔 邪僧跌坐，周身枯骨簌簌：“我苦修禅定，却堕入顽空。原来真空不碍妙有，多谢真人一雷惊醒。” ⚡ 道童轻叹：“有无相生，难易相成。执空也是执啊。”' },
+            { name:'伪丹术士', hp:220, elem:3, scene:'丹霞毒瘴林', quiz:true, desc:'铅汞邪丹，毒瘴迷心。', lore:'外丹烧炼不得法，铅汞成毒。火克金，可焚其丹毒。', story:'💔 术士呕出毒火，惨笑：“我求长生，却害人害己。原来内丹方是正道。” 🔥 道童默然：“金玉满堂，莫之能守；富贵而骄，自遗其咎。”' },
+            { name:'狐魅元君', hp:250, elem:0, scene:'青丘幻境', quiz:true, desc:'魅惑众生，妖木惑心。', lore:'木之妖，擅魅惑。金克木，当以正法斩断情丝。', story:'💔 魅君化为白狐，泪眼婆娑：“我以情丝惑人，却也被情所困。谢谢真人一剑斩断。” ⚡ 道童柔声：“绝圣弃智，绝仁弃义，绝巧弃利。归根曰静，是谓复命。”' },
+            { name:'玄穹魔王', hp:350, elem:null, scene:'紫府金阙', quiz:false, desc:'五毒俱全，万魔至尊。', story:'💔 魔王消散前，竟露出释然微笑：“我本是修道者一缕执念。五毒皆我，我即五毒。今日方悟：道生万物，而不为主。万物归焉，而不为宰。” 🕯️ 云华道童深深一揖：“能破我执，即见天尊。”' }
+        ];
+
+        let currentSchool = null;
+        let player = { hp:200, maxHp:200, dao:150, maxDao:150 };
+        let enemy = {};
+        let enemyIndex = 0;
+        let isQuizActive = false;
+        let summonDuration = 0;
+        let dodgeNext = false;
+        let shengJiStacks = 0;
+        let kunYuanStacks = 0;
+        let poYinTurns = 0;
+        let skillCooldowns = {};
+        let turnCount = 0;
+        let logBox = document.getElementById('logBox');
+        let pendingSchool = null;
+
+        const KE = {0:2, 2:4, 4:1, 1:3, 3:0};
+        const KE_EXPLAIN = {
+            '0,2': '木克土，以木之根柢穿破厚土。',
+            '2,4': '土克水，以堤防壅塞水流。',
+            '4,1': '水克火，以其润下而制炎上之燥。',
+            '1,3': '火克金，以烈火熔金融。',
+            '3,0': '金克木，以锋刃斩伐草木。'
+        };
+
+        function addLog(msg, isHint=false) {
+            let p = document.createElement('p');
+            p.textContent = msg;
+            if(isHint) p.className = 'hint';
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+        function daotongSay(msg) {
+            addLog('🧚 云华道童：'+msg, true);
+            document.getElementById('daotongBubble').textContent = msg;
+            document.getElementById('daotongBubble').style.display = 'block';
+            setTimeout(()=>{ document.getElementById('daotongBubble').style.display = 'none'; }, 4000);
+        }
+
+        function updateUI() {
+            if(!currentSchool) return;
+            document.getElementById('playerHp').textContent = player.hp;
+            document.getElementById('playerMaxHp').textContent = player.maxHp;
+            document.getElementById('playerDao').textContent = player.dao;
+            document.getElementById('playerMaxDao').textContent = player.maxDao;
+            document.getElementById('enemyHp').textContent = enemy.hp;
+            document.getElementById('enemyMaxHp').textContent = enemy.maxHp;
+            document.getElementById('enemyElem').textContent = enemy.elem!==null ? ['木','火','土','金','水'][enemy.elem] : '特殊';
+            document.getElementById('playerHpBar').style.width = (player.hp/player.maxHp*100)+'%';
+            document.getElementById('enemyHpBar').style.width = (enemy.hp/enemy.maxHp*100)+'%';
+            document.getElementById('enemyName').textContent = enemy.name;
+            document.getElementById('sceneTitle').textContent = `【${enemy.scene}】`;
+            document.getElementById('enemyLore').textContent = `📖 道藏秘录：${enemy.lore}`;
+            document.getElementById('shengJiStacks').textContent = shengJiStacks;
+            document.getElementById('kunYuanStacks').textContent = kunYuanStacks;
+            document.getElementById('poYinTurns').textContent = poYinTurns;
+
+            document.querySelectorAll('.skill-btn').forEach(btn => {
+                let key = btn.dataset.skill;
+                let cd = skillCooldowns[key] || 0;
+                let badge = btn.querySelector('.cd-badge');
+                if(cd > 0){
+                    badge.textContent = cd;
+                    badge.style.display = 'block';
+                    btn.disabled = true;
+                } else {
+                    badge.style.display = 'none';
+                    btn.disabled = false;
+                }
+                let skill = findSkill(key);
+                if(skill && player.dao < skill.cost) btn.disabled = true;
+            });
+
+            if(player.hp <= 0) {
+                addLog('💀 道心失守，轮回再修...');
+                disableAllSkills();
+            } else if(enemy.hp <= 0) {
+                let storyBox = document.getElementById('storyBox');
+                storyBox.style.display = 'block';
+                storyBox.textContent = enemy.story;
+                if(enemyIndex < ENEMIES.length-1) {
+                    addLog('✨ 魔障消散！云华道童开启法阵，三息后将前往下一处战场...');
+                    setTimeout(()=>{
+                        storyBox.style.display = 'none';
+                        enemyIndex++; loadEnemy();
+                    }, 6000);
+                } else {
+                    addLog('🎉 紫府金阙大放光明！玄穹魔王化为虚无，三界清平。历劫真君，功德圆满！');
+                    disableAllSkills();
+                }
+            }
+        }
+
+        function findSkill(key) {
+            return COMMON_SKILLS.find(s=>s.key===key) || (currentSchool ? currentSchool.skills.find(s=>s.key===key) : null);
+        }
+
+        function disableAllSkills() {
+            document.querySelectorAll('.skill-btn').forEach(b=>b.disabled = true);
+        }
+
+        function loadEnemy() {
+            let data = ENEMIES[enemyIndex];
+            enemy = {
+                name: data.name, hp: data.hp, maxHp: data.hp, elem: data.elem,
+                scene: data.scene, lore: data.lore, story: data.story,
+                quizTriggered: false, defense: 1.0
+            };
+            player.hp = player.maxHp;
+            player.dao = player.maxDao;
+            shengJiStacks = 0; kunYuanStacks = 0; poYinTurns = 0;
+            summonDuration = 0; dodgeNext = false;
+            skillCooldowns = {};
+            document.getElementById('quizPanel').style.display = 'none';
+            isQuizActive = false;
+            document.getElementById('storyBox').style.display = 'none';
+            renderSkillButtons();
+            updateUI();
+            addLog(`✨ 进入【${data.scene}】—— ${data.desc}`);
+            daotongSay( getEnemyHint() );
+        }
+
+        function getEnemyHint() {
+            const hints = {
+                '嗔恚魔君': '此魔属火。水行最克，或先叠「生机」再用「上清真火」爆发。',
+                '枯禅邪僧': '执空魔，金行可破。「太乙金书」降防后强攻。',
+                '伪丹术士': '毒丹属金，火行克之。「灵官诀」或「上清真火」皆可。',
+                '狐魅元君': '木魅，金行斩根。「五雷符」或「太乙金书」克制。',
+                '玄穹魔王': '无形之魔，需灵活运用生机引爆、护盾回复与道藏问答。'
+            };
+            return hints[enemy.name] || '随机应变，以正法破之。';
+        }
+
+        function renderSkillButtons() {
+            let panel = document.getElementById('skillPanel');
+            panel.innerHTML = '';
+            if(!currentSchool) return;
+            const allSkills = [...COMMON_SKILLS, ...currentSchool.skills];
+            allSkills.forEach(skill => {
+                let btn = document.createElement('button');
+                btn.className = 'skill-btn';
+                btn.dataset.skill = skill.key;
+                btn.innerHTML = `<span class="skill-name">${skill.name}</span><span class="skill-desc">${skill.desc}</span><span class="cd-badge"></span><span class="tooltip">📜 ${skill.source}<br>${skill.detail}<br>消耗:${skill.cost} | 冷却:${skill.cd}回合</span>`;
+                btn.addEventListener('click', () => useSkill(skill.key));
+                panel.appendChild(btn);
+            });
+        }
+
+        function startTurn() {
+            if(player.hp <=0 || enemy.hp <=0) return;
+            turnCount++;
+            player.dao = Math.min(player.maxDao, player.dao + 8);
+            if(currentSchool && currentSchool.name === '全真道') {
+                let heal = Math.floor(player.maxHp * 0.05);
+                player.hp = Math.min(player.maxHp, player.hp + heal);
+                if(heal>0) addLog(`☯️ 内丹绵长：真君回复${heal}点生命。`);
+            }
+            for(let key in skillCooldowns) {
+                if(skillCooldowns[key] > 0) skillCooldowns[key]--;
+            }
+            if(poYinTurns > 0) {
+                poYinTurns--;
+                if(poYinTurns === 0) {
+                    enemy.defense = 1.0;
+                    addLog('⚡ 敌方「破印」状态消散，防御恢复正常。');
+                }
+            }
+            if(summonDuration > 0) {
+                let sDmg = 14;
+                enemy.hp = Math.max(0, enemy.hp - sDmg);
+                addLog(`🧑‍🌾 力士挥拳，造成 ${sDmg} 伤害。`);
+                if(currentSchool.name === '茅山宗') player.dao = Math.min(player.maxDao, player.dao+10);
+                summonDuration--;
+                if(summonDuration === 0) addLog('🌱 力士回归尘土。');
+            }
+            updateUI();
+        }
+
+        function useSkill(skillKey) {
+            if(isQuizActive || player.hp <=0 || enemy.hp <=0) return;
+            let skill = findSkill(skillKey);
+            if(!skill) return;
+            if(skillCooldowns[skillKey] > 0) return;
+            if(player.dao < skill.cost) { addLog('☯️ 道力不足。'); return; }
+            player.dao -= skill.cost;
+            if(skill.cd > 0) skillCooldowns[skillKey] = skill.cd;
+            let dmg = skill.dmg || 0;
+            let bonus = 1.0;
+            let explain = '';
+
+            if(skill.elem !== null && enemy.elem !== null) {
+                if(KE[skill.elem] === enemy.elem) {
+                    bonus = 1.5; explain = KE_EXPLAIN[`${skill.elem},${enemy.elem}`];
+                    if(currentSchool.name === '正一道') bonus += 0.3;
+                } else if(KE[enemy.elem] === skill.elem) {
+                    bonus = 0.5; explain = `被${['木','火','土','金','水'][enemy.elem]}行反克，效果减半。`;
+                }
+            }
+            dmg = Math.floor(dmg * bonus * enemy.defense);
+            if(explain) addLog(`📖 ${explain}`);
+            addLog(`📜 出自 ${skill.source}`);
+
+            switch(skill.special) {
+                case 'stack_shengji': shengJiStacks++; addLog(`🌿 获得1层「生机」(共${shengJiStacks}层)。`); break;
+                case 'consume_shengji': dmg += shengJiStacks * 12; addLog(`🔥 消耗${shengJiStacks}层生机，额外造成伤害！`); shengJiStacks = 0; break;
+                case 'stack_kunyuan': kunYuanStacks++; addLog(`⛰️ 获得1层「坤元」护盾(共${kunYuanStacks}层)。`); break;
+                case 'consume_kunyuan': let heal = kunYuanStacks * 6; player.hp = Math.min(player.maxHp, player.hp + heal); addLog(`💧 消耗${kunYuanStacks}层坤元，回复${heal}点生命。`); kunYuanStacks = 0; break;
+                case 'cleanse_debuff': shengJiStacks = 0; kunYuanStacks = 0; enemy.defense = 0.7; poYinTurns = 3; addLog('⚡ 驱散自身状态，敌方附加「破印」，防御降低30%持续3回合。'); break;
+                case 'refresh': player.hp = Math.max(1, player.hp - Math.floor(player.hp*0.1)); for(let k in skillCooldowns) skillCooldowns[k]=0; addLog('🌪️ 进入「坐忘」之境，所有技能冷却重置。'); break;
+                case 'gold_boost': if(enemy.elem===0) { dmg = Math.floor(dmg*1.8); addLog('⚡ 金克木！额外伤害。'); } break;
+                case 'fire_boost': if(enemy.elem===3) { dmg = Math.floor(dmg*1.8); addLog('🔥 火克金！额外伤害。'); } break;
+                case 'earth_boost': if(enemy.elem===4) { dmg = Math.floor(dmg*1.8); addLog('⛰️ 土克水！额外伤害。'); } break;
+                case 'big_shield': kunYuanStacks += 3; addLog('⛰️ 获得3层坤元护盾。'); break;
+                case 'heal_boost': player.hp = Math.min(player.maxHp, player.hp+35); addLog('🌿 回复35点生命。'); break;
+                case 'cleanse_self': addLog('💧 净化自身异常状态。'); break;
+                case 'summon': summonDuration = 3; addLog('🌱 黄巾力士应召而来！（持续3回合）'); break;
+                case 'dodge': dodgeNext = true; addLog('🌫️ 进入隐身状态，下回合闪避攻击并回气。'); break;
+            }
+            
+            enemy.hp = Math.max(0, enemy.hp - dmg);
+            if(dmg>0) addLog(`⚔️ 施展【${skill.name}】，造成 ${dmg} 点伤害。`);
+            
+            updateUI();
+            if(enemy.hp > 0) {
+                enemyTurn();
+            } else {
+                updateUI();
+            }
+        }
+
+        function enemyTurn() {
+            if(enemy.hp <=0) return;
+            let dmg = 12 + Math.floor(Math.random()*16);
+            let specialSkill = '';
+            if(enemy.name === '嗔恚魔君' && turnCount % 3 === 0) {
+                dmg = Math.floor(dmg * 1.8);
+                specialSkill = '发动「焚天怒焰」，';
+            } else if(enemy.name === '枯禅邪僧' && turnCount % 4 === 0) {
+                specialSkill = '施展「顽空寂灭」，';
+                let allKeys = [...COMMON_SKILLS, ...currentSchool.skills].map(s=>s.key);
+                let target = allKeys[Math.floor(Math.random()*allKeys.length)];
+                skillCooldowns[target] = (skillCooldowns[target]||0) + 2;
+                addLog(`👹 邪僧封住了你的【${findSkill(target)?.name||target}】2回合！`);
+            }
+            if(dodgeNext) {
+                addLog('🌫️ 隐身咒生效，闪避了本次攻击！');
+                dodgeNext = false;
+                player.dao = Math.min(player.maxDao, player.dao+12);
+            } else {
+                if(kunYuanStacks > 0) {
+                    let block = Math.min(kunYuanStacks * 5, dmg);
+                    dmg -= block; kunYuanStacks--;
+                    addLog(`⛰️ 护盾吸收 ${block} 点伤害。`);
+                }
+                player.hp = Math.max(0, player.hp - dmg);
+                addLog(`👹 ${enemy.name} ${specialSkill}攻击造成 ${dmg} 伤害。`);
+            }
+            updateUI();
+            if(enemy.hp <= enemy.maxHp*0.3 && !enemy.quizTriggered && ENEMIES[enemyIndex].quiz) {
+                enemy.quizTriggered = true; triggerQuiz();
+            }
+            if(player.hp > 0 && enemy.hp > 0) startTurn();
+        }
+
+        function triggerQuiz() {
+            isQuizActive = true;
+            let q = DAO_QUESTIONS[Math.floor(Math.random()*DAO_QUESTIONS.length)];
+            document.getElementById('quizQuestion').textContent = `📜 ${q.source}：${q.question}`;
+            let html = '';
+            q.options.forEach(o => html += `<button class="quiz-btn" data-correct="${o.isCorrect}">${o.text}</button>`);
+            document.getElementById('quizOptions').innerHTML = html;
+            document.getElementById('quizPanel').style.display = 'block';
+            daotongSay('魔君道心动摇！快用真经作答。');
+        }
+
+        document.getElementById('quizOptions').addEventListener('click', (e)=>{
+            if(e.target.classList.contains('quiz-btn')){
+                let correct = e.target.dataset.correct === 'true';
+                document.getElementById('quizPanel').style.display = 'none';
+                isQuizActive = false;
+                if(correct) {
+                    enemy.hp = 0; addLog('✨ 正法破妄，魔君道心粉碎！');
+                } else {
+                    enemy.defense = 0.6; enemy.hp = Math.floor(enemy.maxHp*0.4);
+                    addLog('💢 回答有误，魔君吸收道心动摇，防御增强。');
+                }
+                updateUI();
+            }
+        });
+
+        document.querySelectorAll('.school-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                let schoolKey = btn.dataset.school;
+                pendingSchool = schoolKey;
+                let info = SCHOOLS[schoolKey];
+                document.getElementById('schoolDesc').textContent = info.desc;
+                document.getElementById('schoolDesc').style.display = 'block';
+                document.getElementById('confirmSchoolBtn').style.display = 'block';
+            });
+        });
+        document.getElementById('confirmSchoolBtn').addEventListener('click', () => {
+            if(!pendingSchool) return;
+            currentSchool = SCHOOLS[pendingSchool];
+            player = { hp:200, maxHp:200, dao:150, maxDao:150 };
+            enemyIndex = 0;
+            shengJiStacks = 0; kunYuanStacks = 0; poYinTurns = 0;
+            skillCooldowns = {};
+            document.getElementById('schoolSelection').style.display = 'none';
+            document.getElementById('gameMain').style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'block';
+            logBox.innerHTML = '';
+            addLog(`🏛️ 你拜入【${currentSchool.name}】。${currentSchool.desc}`);
+            loadEnemy();
+            startTurn();
+        });
+        document.getElementById('resetBtn').addEventListener('click', ()=>{
+            document.getElementById('schoolSelection').style.display = 'block';
+            document.getElementById('gameMain').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('confirmSchoolBtn').style.display = 'none';
+            document.getElementById('schoolDesc').style.display = 'none';
+            currentSchool = null; pendingSchool = null;
+        });
+        updateUI();
+    })();
+</script>
+</body>
+</html>

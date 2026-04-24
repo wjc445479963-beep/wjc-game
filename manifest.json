@@ -1,0 +1,10 @@
+{
+  "name": "三千道藏王大师",
+  "short_name": "三千道藏",
+  "description": "以道藏智慧降服诸魔的回合制游戏",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d0703",
+  "theme_color": "#b89a50",
+  "orientation": "portrait-primary"
+}
