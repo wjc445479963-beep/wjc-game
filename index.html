@@ -4,42 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>三千道藏王大师</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         * { box-sizing: border-box; }
-        body { background: #0d0703; color: #e5d6b0; font-family: 'KaiTi', '楷体', 'Noto Serif SC', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 16px; }
-        .game-container { max-width: 740px; width: 100%; background: linear-gradient(135deg, #2d2218 0%, #1a120a 100%); border: 3px solid #b89a50; border-radius: 32px; padding: 20px; box-shadow: 0 0 40px #b44c0e33; position: relative; }
-        .daotong-icon { position: absolute; top: 12px; right: 20px; background: #2f4530; border: 2px solid #5a8fca; border-radius: 50%; width: 56px; height: 56px; text-align: center; line-height: 56px; font-size: 1.8rem; color: #aaddff; z-index: 10; }
-        .daotong-bubble { position: absolute; top: 76px; right: 20px; background: #1e2f1e; border: 1px solid #5a8fca; border-radius: 12px; padding: 10px; width: 200px; color: #ccddcc; font-size: 0.8rem; z-index: 10; display: none; }
-        .daozang-scroll { position: absolute; top: 20px; right: 86px; background: #3e2e1a; border: 1px solid #b89a50; border-radius: 50%; width: 32px; height: 32px; text-align: center; line-height: 32px; font-size: 1rem; color: #ffbb4d; z-index: 10; cursor: default; }
+        body { background: #0d0703; color: #e5d6b0; font-family: 'KaiTi', '楷体', 'Noto Serif SC', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 12px; }
+        .game-container { max-width: 720px; width: 100%; background: linear-gradient(135deg, #2d2218 0%, #1a120a 100%); border: 3px solid #b89a50; border-radius: 32px; padding: 16px; box-shadow: 0 0 40px #b44c0e33; position: relative; }
+        .daotong-icon { position: absolute; top: 10px; right: 16px; background: #2f4530; border: 2px solid #5a8fca; border-radius: 50%; width: 48px; height: 48px; text-align: center; line-height: 48px; font-size: 1.5rem; color: #aaddff; z-index: 10; }
+        .daotong-bubble { position: absolute; top: 64px; right: 16px; background: #1e2f1e; border: 1px solid #5a8fca; border-radius: 12px; padding: 8px; width: 180px; color: #ccddcc; font-size: 0.75rem; z-index: 10; display: none; }
+        .daozang-scroll { position: absolute; top: 16px; right: 72px; background: #3e2e1a; border: 1px solid #b89a50; border-radius: 50%; width: 28px; height: 28px; text-align: center; line-height: 28px; font-size: 0.9rem; color: #ffbb4d; z-index: 10; }
         .daozang-scroll:hover .daozang-tooltip { display: block; }
-        .daozang-tooltip { display: none; position: absolute; top: 40px; right: 0; width: 260px; background: #1e140b; color: #ffdd99; border: 1px solid #b89a50; border-radius: 8px; padding: 10px; font-size: 0.8rem; z-index: 20; }
-        h1 { text-align: center; color: #ffbb4d; letter-spacing: 4px; font-size: 2rem; margin: 10px 0 0; }
-        .scene-title { text-align: center; font-size: 1.1rem; color: #ccaa77; margin: 8px 0; }
-        .status-panel { display: flex; justify-content: space-around; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 16px; font-size: 0.95rem; }
-        .bar { background: #3a2a1a; height: 20px; border-radius: 10px; overflow: hidden; margin: 6px 0; }
+        .daozang-tooltip { display: none; position: absolute; top: 36px; right: 0; width: 240px; background: #1e140b; color: #ffdd99; border: 1px solid #b89a50; border-radius: 8px; padding: 8px; font-size: 0.75rem; z-index: 20; }
+        h1 { text-align: center; color: #ffbb4d; letter-spacing: 2px; font-size: 1.6rem; margin: 8px 0 0; padding: 0 60px; }
+        .scene-title { text-align: center; font-size: 1rem; color: #ccaa77; margin: 6px 0; }
+        .status-panel { display: flex; justify-content: space-around; margin: 12px 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 14px; font-size: 0.9rem; }
+        .bar { background: #3a2a1a; height: 18px; border-radius: 9px; overflow: hidden; margin: 4px 0; }
         .bar-fill { height: 100%; width: 100%; transition: width 0.3s; }
         .health { background: #c0392b; }
-        .skills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 16px 0; }
-        .skill-btn { background: #3e2e1a; border: 2px solid #b89a50; color: #ffdd99; padding: 10px 14px; border-radius: 30px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: inherit; position: relative; text-align: center; min-width: 90px; }
-        .skill-btn:active { background: #5e4426; border-color: #ffbb4d; }
+        .skills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0; }
+        .skill-btn { background: #3e2e1a; border: 2px solid #b89a50; color: #ffdd99; padding: 8px 12px; border-radius: 28px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-family: inherit; position: relative; text-align: center; min-width: 80px; }
+        .skill-btn.selected { border-color: #ffbb4d; box-shadow: 0 0 16px #ffaa33; background: #5e4426; }
         .skill-btn:disabled { opacity: 0.5; pointer-events: none; }
         .skill-btn .skill-name { font-weight: bold; display: block; }
-        .skill-btn .skill-desc { font-size: 0.7rem; color: #ccaa77; display: block; margin-top: 2px; }
-        .skill-btn .cd-badge { position: absolute; top: -6px; right: -6px; background: #c0392b; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; text-align: center; line-height: 20px; display: none; }
-        .skill-btn .tooltip { display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); width: 260px; background: #1e140b; color: #ffdd99; border: 1px solid #b89a50; border-radius: 8px; padding: 10px; font-size: 0.75rem; z-index: 30; }
-        .skill-btn:hover .tooltip { display: block; }
-        .log { background: #100a04; border-radius: 16px; padding: 12px; height: 200px; overflow-y: auto; font-size: 0.85rem; color: #ccbb99; margin-top: 16px; border: 1px solid #5e4426; }
+        .skill-btn .skill-desc { font-size: 0.65rem; color: #ccaa77; display: block; margin-top: 2px; }
+        .skill-btn .cd-badge { position: absolute; top: -5px; right: -5px; background: #c0392b; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; text-align: center; line-height: 18px; display: none; }
+        .confirm-bar { display: flex; gap: 8px; justify-content: center; margin: 8px 0; display: none; }
+        .confirm-btn, .cancel-btn { background: #b89a50; color: #1a0f0a; font-weight: bold; padding: 8px 18px; border-radius: 24px; border: none; cursor: pointer; font-family: inherit; font-size: 0.9rem; }
+        .cancel-btn { background: #5e3a1a; color: #ffdd99; }
+        .log { background: #100a04; border-radius: 14px; padding: 10px; height: 180px; overflow-y: auto; font-size: 0.8rem; color: #ccbb99; margin-top: 12px; border: 1px solid #5e4426; }
         .log .hint { color: #aaddaa; }
-        .story-box { background: #1e140b; border: 2px solid #ffbb4d; border-radius: 16px; padding: 14px; margin-top: 12px; color: #ffeedd; font-style: italic; display: none; }
-        .quiz-panel { background: #1e140b; border: 2px solid #b89a50; border-radius: 16px; padding: 14px; margin: 14px 0; text-align: center; display: none; }
-        .quiz-btn { background: #3e2e1a; border: 2px solid #ffbb4d; color: #ffdd99; padding: 8px 14px; border-radius: 20px; margin: 4px; cursor: pointer; font-size: 0.9rem; }
-        .reset-btn { width: 100%; margin-top: 16px; background: #5e3a1a; border: 2px solid #b89a50; color: #ffdd99; padding: 12px; border-radius: 40px; font-size: 1rem; cursor: pointer; }
-        .school-select { text-align: center; margin: 20px 0; }
-        .school-btn { background: #2d2218; border: 3px solid #b89a50; color: #ffdd99; padding: 16px 20px; border-radius: 40px; font-size: 1.1rem; margin: 8px; cursor: pointer; width: 80%; display: block; margin-left: auto; margin-right: auto; }
-        .school-desc { background: #1e140b; border: 1px solid #b89a50; border-radius: 16px; padding: 12px; margin: 12px 0; color: #ccbb99; font-size: 0.9rem; display: none; }
-        .confirm-school-btn { background: #b89a50; color: #1a0f0a; font-weight: bold; padding: 12px 24px; border-radius: 30px; border: none; margin: 8px; cursor: pointer; display: none; font-size: 1rem; width: 60%; margin-left: auto; margin-right: auto; }
-        .buff-display { display: flex; justify-content: space-around; margin-top: 6px; font-size: 0.8rem; }
-        .buff-display span { background: #3a2a1a; padding: 2px 8px; border-radius: 20px; color: #ccaa77; }
+        .story-box { background: #1e140b; border: 2px solid #ffbb4d; border-radius: 14px; padding: 12px; margin-top: 10px; color: #ffeedd; font-style: italic; display: none; }
+        .quiz-panel { background: #1e140b; border: 2px solid #b89a50; border-radius: 14px; padding: 12px; margin: 12px 0; text-align: center; display: none; }
+        .quiz-btn { background: #3e2e1a; border: 2px solid #ffbb4d; color: #ffdd99; padding: 6px 12px; border-radius: 18px; margin: 4px; cursor: pointer; font-size: 0.85rem; }
+        .reset-btn { width: 100%; margin-top: 14px; background: #5e3a1a; border: 2px solid #b89a50; color: #ffdd99; padding: 10px; border-radius: 36px; font-size: 0.9rem; cursor: pointer; }
+        .school-select { text-align: center; margin: 16px 0; }
+        .school-btn { background: #2d2218; border: 3px solid #b89a50; color: #ffdd99; padding: 14px 18px; border-radius: 36px; font-size: 1rem; margin: 6px; cursor: pointer; width: 80%; display: block; margin-left: auto; margin-right: auto; }
+        .school-desc { background: #1e140b; border: 1px solid #b89a50; border-radius: 14px; padding: 10px; margin: 10px 0; color: #ccbb99; font-size: 0.85rem; display: none; }
+        .confirm-school-btn { background: #b89a50; color: #1a0f0a; font-weight: bold; padding: 10px 20px; border-radius: 28px; border: none; margin: 6px; cursor: pointer; display: none; font-size: 0.9rem; width: 60%; margin-left: auto; margin-right: auto; }
+        .buff-display { display: flex; justify-content: space-around; margin-top: 4px; font-size: 0.75rem; }
+        .buff-display span { background: #3a2a1a; padding: 2px 6px; border-radius: 18px; color: #ccaa77; }
+        @media (max-width: 500px) {
+            h1 { font-size: 1.3rem; padding: 0 50px; letter-spacing: 1px; }
+            .skill-btn { padding: 6px 8px; font-size: 0.7rem; min-width: 70px; }
+            .daotong-icon { width: 40px; height: 40px; line-height: 40px; font-size: 1.2rem; top: 8px; right: 12px; }
+            .daozang-scroll { width: 24px; height: 24px; line-height: 24px; font-size: 0.7rem; top: 12px; right: 58px; }
+        }
     </style>
 </head>
 <body>
@@ -51,7 +59,7 @@
     <div id="sceneTitle" class="scene-title"></div>
 
     <div id="schoolSelection">
-        <p style="font-size:1.6rem; color:#ffbb4d;">🏛️ 择一道门，承其法脉</p>
+        <p style="font-size:1.4rem; color:#ffbb4d;">🏛️ 择一道门，承其法脉</p>
         <button class="school-btn" data-school="zhengyi">⚡ 正一道 · 符箓驱邪</button>
         <button class="school-btn" data-school="quanzhen">☯️ 全真道 · 内丹炼养</button>
         <button class="school-btn" data-school="maoshan">🌿 茅山宗 · 秘术摄妖</button>
@@ -62,7 +70,7 @@
     <div id="gameMain" style="display: none;">
         <div class="status-panel">
             <div><strong>历劫真君</strong><br>❤️ <span id="playerHp">200</span> / <span id="playerMaxHp">200</span><br>☯️ <span id="playerDao">150</span> / <span id="playerMaxDao">150</span></div>
-            <div><strong id="enemyName">嗔恚魔君</strong><br>❤️ <span id="enemyHp">200</span> / <span id="enemyMaxHp">200</span><br>属性: <span id="enemyElem">火</span></div>
+            <div><strong id="enemyName">嗔恚魔君</strong><br>❤️ <span id="enemyHp">240</span> / <span id="enemyMaxHp">240</span><br>属性: <span id="enemyElem">火</span></div>
         </div>
         <div><div id="playerHpBar" class="bar-fill health" style="width:100%"></div></div>
         <div><div id="enemyHpBar" class="bar-fill health" style="width:100%"></div></div>
@@ -73,6 +81,10 @@
         </div>
 
         <div class="skills" id="skillPanel"></div>
+        <div class="confirm-bar" id="confirmBar">
+            <button class="confirm-btn" id="confirmSkillBtn">⚡ 确认释放</button>
+            <button class="cancel-btn" id="cancelSkillBtn">↩️ 取消</button>
+        </div>
 
         <div class="quiz-panel" id="quizPanel">
             <p id="quizQuestion"></p>
@@ -154,6 +166,7 @@
         let turnCount = 0;
         let logBox = document.getElementById('logBox');
         let pendingSchool = null;
+        let selectedSkill = null; // 当前凝神选中的技能
 
         const KE = {0:2, 2:4, 4:1, 1:3, 3:0};
         const KE_EXPLAIN = {
@@ -210,6 +223,12 @@
                 }
                 let skill = findSkill(key);
                 if(skill && player.dao < skill.cost) btn.disabled = true;
+                // 高亮当前选中技能
+                if(key === selectedSkill?.key) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
             });
 
             if(player.hp <= 0) {
@@ -252,6 +271,8 @@
             shengJiStacks = 0; kunYuanStacks = 0; poYinTurns = 0;
             summonDuration = 0; dodgeNext = false;
             skillCooldowns = {};
+            selectedSkill = null;
+            document.getElementById('confirmBar').style.display = 'none';
             document.getElementById('quizPanel').style.display = 'none';
             isQuizActive = false;
             document.getElementById('storyBox').style.display = 'none';
@@ -281,50 +302,36 @@
                 let btn = document.createElement('button');
                 btn.className = 'skill-btn';
                 btn.dataset.skill = skill.key;
-                btn.innerHTML = `<span class="skill-name">${skill.name}</span><span class="skill-desc">${skill.desc}</span><span class="cd-badge"></span><span class="tooltip">📜 ${skill.source}<br>${skill.detail}<br>消耗:${skill.cost} | 冷却:${skill.cd}回合</span>`;
-                btn.addEventListener('click', () => useSkill(skill.key));
+                btn.innerHTML = `<span class="skill-name">${skill.name}</span><span class="skill-desc">${skill.desc}</span><span class="cd-badge"></span>`;
+                btn.addEventListener('click', () => selectSkill(skill));
                 panel.appendChild(btn);
             });
         }
 
-        function startTurn() {
-            if(player.hp <=0 || enemy.hp <=0) return;
-            turnCount++;
-            player.dao = Math.min(player.maxDao, player.dao + 8);
-            if(currentSchool && currentSchool.name === '全真道') {
-                let heal = Math.floor(player.maxHp * 0.05);
-                player.hp = Math.min(player.maxHp, player.hp + heal);
-                if(heal>0) addLog(`☯️ 内丹绵长：真君回复${heal}点生命。`);
+        function selectSkill(skill) {
+            if(isQuizActive || player.hp <=0 || enemy.hp <=0) return;
+            if(skillCooldowns[skill.key] > 0) return;
+            if(player.dao < skill.cost) { addLog('☯️ 道力不足。'); return; }
+            // 如果点击的是已选中的技能，则直接释放
+            if(selectedSkill && selectedSkill.key === skill.key) {
+                executeSkill();
+                return;
             }
-            for(let key in skillCooldowns) {
-                if(skillCooldowns[key] > 0) skillCooldowns[key]--;
-            }
-            if(poYinTurns > 0) {
-                poYinTurns--;
-                if(poYinTurns === 0) {
-                    enemy.defense = 1.0;
-                    addLog('⚡ 敌方「破印」状态消散，防御恢复正常。');
-                }
-            }
-            if(summonDuration > 0) {
-                let sDmg = 14;
-                enemy.hp = Math.max(0, enemy.hp - sDmg);
-                addLog(`🧑‍🌾 力士挥拳，造成 ${sDmg} 伤害。`);
-                if(currentSchool.name === '茅山宗') player.dao = Math.min(player.maxDao, player.dao+10);
-                summonDuration--;
-                if(summonDuration === 0) addLog('🌱 力士回归尘土。');
-            }
+            // 否则进入凝神状态
+            selectedSkill = skill;
+            document.getElementById('confirmBar').style.display = 'flex';
+            addLog(`🧘 凝神：「${skill.name}」—— ${skill.detail} (📜 ${skill.source}，消耗${skill.cost}道力，冷却${skill.cd}回合)`);
             updateUI();
         }
 
-        function useSkill(skillKey) {
-            if(isQuizActive || player.hp <=0 || enemy.hp <=0) return;
-            let skill = findSkill(skillKey);
-            if(!skill) return;
-            if(skillCooldowns[skillKey] > 0) return;
-            if(player.dao < skill.cost) { addLog('☯️ 道力不足。'); return; }
+        function executeSkill() {
+            if(!selectedSkill) return;
+            let skill = selectedSkill;
+            selectedSkill = null;
+            document.getElementById('confirmBar').style.display = 'none';
+            // 实际释放逻辑
             player.dao -= skill.cost;
-            if(skill.cd > 0) skillCooldowns[skillKey] = skill.cd;
+            if(skill.cd > 0) skillCooldowns[skill.key] = skill.cd;
             let dmg = skill.dmg || 0;
             let bonus = 1.0;
             let explain = '';
@@ -367,6 +374,45 @@
             } else {
                 updateUI();
             }
+        }
+
+        function cancelSkill() {
+            selectedSkill = null;
+            document.getElementById('confirmBar').style.display = 'none';
+            updateUI();
+            addLog('↩️ 凝神消散，重新选择道法。');
+        }
+
+        function startTurn() {
+            if(player.hp <=0 || enemy.hp <=0) return;
+            turnCount++;
+            player.dao = Math.min(player.maxDao, player.dao + 8);
+            if(currentSchool && currentSchool.name === '全真道') {
+                let heal = Math.floor(player.maxHp * 0.05);
+                player.hp = Math.min(player.maxHp, player.hp + heal);
+                if(heal>0) addLog(`☯️ 内丹绵长：真君回复${heal}点生命。`);
+            }
+            for(let key in skillCooldowns) {
+                if(skillCooldowns[key] > 0) skillCooldowns[key]--;
+            }
+            if(poYinTurns > 0) {
+                poYinTurns--;
+                if(poYinTurns === 0) {
+                    enemy.defense = 1.0;
+                    addLog('⚡ 敌方「破印」状态消散，防御恢复正常。');
+                }
+            }
+            if(summonDuration > 0) {
+                let sDmg = 14;
+                enemy.hp = Math.max(0, enemy.hp - sDmg);
+                addLog(`🧑‍🌾 力士挥拳，造成 ${sDmg} 伤害。`);
+                if(currentSchool.name === '茅山宗') player.dao = Math.min(player.maxDao, player.dao+10);
+                summonDuration--;
+                if(summonDuration === 0) addLog('🌱 力士回归尘土。');
+            }
+            selectedSkill = null;
+            document.getElementById('confirmBar').style.display = 'none';
+            updateUI();
         }
 
         function enemyTurn() {
@@ -428,6 +474,9 @@
                 updateUI();
             }
         });
+
+        document.getElementById('confirmSkillBtn').addEventListener('click', executeSkill);
+        document.getElementById('cancelSkillBtn').addEventListener('click', cancelSkill);
 
         document.querySelectorAll('.school-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
