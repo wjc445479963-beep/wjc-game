@@ -111,7 +111,7 @@
 
         @keyframes pulseGlow { 0%{box-shadow:0 0 0 0 rgba(212,175,55,0.7);} 70%{box-shadow:0 0 0 8px rgba(212,175,55,0);} 100%{box-shadow:0 0 0 0 rgba(212,175,55,0);} }
         @keyframes blink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
-        .floating-text { position: absolute; font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px 2px #000, 0 0 5px rgba(255,255,255,0.5); z-index: 100; animation: floatUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: none; }
+        .floating-text { position: absolute; font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px 2px #000, 0 0 5px rgba(255,255,255,0.5); z-index: 100; animation: floatUp 1s forwards; pointer-events: none; }
         @keyframes floatUp { 0%{opacity:1; transform:translateY(0) scale(0.8);} 80%{opacity:1; transform:translateY(-50px) scale(1.2);} 100%{opacity:0; transform:translateY(-60px) scale(1);} }
     </style>
 </head>
@@ -251,7 +251,6 @@
 </div>
 
 <script>
-/* ================= 核心数据字典 ================= */
 const DB = {
     realms: ['未入道', '入门弟子', '练气小成', '练气大圆满', '筑基真人', '结丹宗师', '金丹大道', '元婴老怪'],
     origins: {
@@ -272,31 +271,29 @@ const DB = {
         jinguang: { name: '金光神咒', cost: 15, desc: '【防御】获得2层[金光]护盾(抵挡10伤/层)。', type: 'defend', buff: 'jinguang', stacks: 2 },
         tianpeng: { name: '天蓬神咒', cost: 25, desc: '【爆发】造成22伤。若有[金光]，消耗1层使伤害翻倍！', type: 'attack', tags: ['lei'], dmg: 22 },
         zhaolei: { name: '召雷符', cost: 10, cd: 2, desc: '【削弱】造成10伤，给敌挂3层[雷印](每回受8雷击)。冷却2回。', type: 'attack', tags: ['lei'], dmg: 10, debuff: 'leiyin', stacks: 3 },
-        yushu: { name: '玉枢神雷', cost: 30, desc: '【爆发】造成25伤。引爆敌方所有[雷印]，每层雷印使本技能伤害额外提升50%！', type: 'attack', tags: ['lei'], dmg: 25 },
+        yushu: { name: '玉枢神雷', cost: 30, desc: '【爆发】造成25伤。动态引爆[雷印]，每层额外耗5蓝并加50%伤害！', type: 'attack', tags: ['lei'], dmg: 25 },
         shouyi: { name: '抱元守一', cost: 10, desc: '【恢复】直接恢复40气血。', type: 'support', heal: 40 },
         yuanshen: { name: '元神剑气', cost: 20, desc: '【爆发】造成20伤。若你气血 >= 90%，剑意通神伤害翻倍。', type: 'attack', dmg: 20 },
         jiamu: { name: '甲木真气', cost: 15, desc: '【辅助】获得4层[生机](每回合恢复5点气血)。', type: 'support', buff: 'shengji', stacks: 4 },
-        sanmei: { name: '三昧真火', cost: 25, desc: '【爆发】造成20火伤。引爆所有[生机]，每层附加25点真实伤害。', type: 'attack', tags: ['huo'], dmg: 20 },
-        kanli: { name: '坎离交媾', cost: 20, desc: '【防御】获得1层[化解]，免疫下次攻击并恢复25气血。', type: 'defend', buff: 'huajie', stacks: 1 },
-        dunjia: { name: '奇门遁甲', cost: 20, desc: '【防御】遁入虚空，获得1层[隐匿](免疫下一次伤害)。', type: 'defend', buff: 'yinni', stacks: 1 },
+        sanmei: { name: '三昧真火', cost: 25, desc: '【爆发】造成20火伤。动态引爆[生机]，每层额外耗5蓝并加25点真实伤害。', type: 'attack', tags: ['huo'], dmg: 20 },
+        kanli: { name: '坎离交媾', cost: 20, desc: '【防御】化解下次敌方攻击并恢复25气血。', type: 'defend', buff: 'huajie', stacks: 1 },
+        dunjia: { name: '奇门遁甲', cost: 20, desc: '【防御】遁入虚空，获得[隐匿](免疫下一次伤害)。', type: 'defend', buff: 'yinni', stacks: 1 },
         liujia: { name: '六丁六甲', cost: 30, cd: 4, desc: '【召唤】持续3回，每回自动斩邪15点。冷却4回。', type: 'support', buff: 'liujia', stacks: 3 },
         fushui: { name: '净心符水', cost: 15, desc: '【净化】清除自身负面，恢复25气血。', type: 'support', heal: 25 },
         tianyi: { name: '天一真水', cost: 20, desc: '【削弱】造成15伤，挂2层[迟缓](降低敌人20%伤害)。', type: 'attack', tags: ['shui'], dmg: 15, debuff: 'chihuan', stacks: 2 },
         wulei: { name: '五雷正法', cost: 40, cd: 3, desc: '【绝学】造成50点毁灭雷伤！冷却3回。', type: 'attack', tags: ['lei'], dmg: 50 },
         taiqing: { name: '太清真气', cost: 0, desc: '【调息】不攻击，直接恢复25点真元。', type: 'support', heal: 0 }
     },
-    // ================== 第一卷 + 第二卷 完整剧本 ==================
     script: [
-        // ---------------- 第一卷 ----------------
         { type: 'vn', scene: [{ char: '🧔', name: '传功长老', text: '“这尊百年铁木人桩，你且全力击打，让我看看成色！”' }] },
-        { type: 'battle', enemy: { name: '铁木人桩', hp: 60, acts: ['weak', 'weak'], heavyName: '', heavyDmg: 0, emoji: '🪵', baseDmg: 5, desc: '毫无威胁，请熟悉【法术组合】与【光效反馈】。' } },
+        { type: 'battle', enemy: { name: '铁木人桩', hp: 60, acts: ['weak', 'weak'], emoji: '🪵', baseDmg: 5, desc: '毫无威胁，请熟悉【法术组合】与【光效反馈】。' } },
         { type: 'vn', scene: [{ char: '📜', name: '道藏感悟', text: '“老君曰：大道无形，生育天地... 人能常清静，天地悉皆归。” ——《清静经》', bg: '#1a1c22' }] },
         { type: 'upgrade_stats', pts: 2 },
         { type: 'vn', scene: [
             { char: '🦹', name: '嚣张师兄', text: '“就凭你这新人，也妄图染指筑基丹？给我乖乖躺下！”' },
             { char: '👤', name: '你', text: '“大巧若拙，师兄太过浮躁了。”' }
         ]},
-        { type: 'battle', enemy: { name: '嚣张师兄', hp: 130, acts: ['attack', 'heavy', 'attack'], heavyName: '猛虎出匣', heavyDmg: 30, emoji: '🦹', baseDmg: 10, desc: '注意蓄力提示！务必使用【防御/化解/隐匿】法术规避重击！' } },
+        { type: 'battle', enemy: { name: '嚣张师兄', hp: 130, acts: ['attack', 'heavy', 'attack'], heavyName: '猛虎出匣', heavyDmg: 30, emoji: '🦹', baseDmg: 10, desc: '注意蓄力！他释放【猛虎出匣】会强行震散你 20 点真元，千万用防御技避开！' } },
         { type: 'vn', scene: [
             { char: '👥', name: '围观弟子', text: '“嘶...竟然越阶战胜了师兄！”' },
             { char: '📜', name: '道藏感悟', text: '“上善若水。水善利万物而不争，处众人之所恶，故几于道。” ——《道德经·第八章》', bg: '#1a1c22' }
@@ -307,32 +304,31 @@ const DB = {
             { char: '📜', name: '宗门玉简', text: '“山下百里荒村频现妖氛。命精锐前往查探...”' },
             { char: '🐺', name: '嗜血狼妖', text: '“吼！！正好做我的血食！”' }
         ]},
-        { type: 'battle', enemy: { name: '嗜血狼妖', hp: 220, acts: ['heavy', 'attack', 'attack'], heavyName: '血月狂抓', heavyDmg: 40, emoji: '🐺', baseDmg: 12, desc: '开局必然释放致命重击，起手必须防守！' } },
+        { type: 'battle', enemy: { name: '嗜血狼妖', hp: 220, acts: ['heavy', 'attack', 'attack'], heavyName: '血月碎击', heavyDmg: 35, emoji: '🐺', baseDmg: 12, desc: '起手就是致命重击【血月碎击】，中招会陷入深度[流血]状态！' } },
         { type: 'vn', scene: [
             { char: '📜', name: '道藏感悟', text: '“夫佳兵者，不祥之器，物或恶之，故有道者不处。” ——《道德经·第三十一章》', bg: '#1a1c22' },
             { char: '🌩️', name: '天地异象', text: '（黑云压城，雷劫将至，心魔自灵台涌现！）' }
         ]},
-        { type: 'battle', enemy: { name: '贪妄心魔', hp: 380, acts: ['attack', 'heavy', 'attack', 'heavy'], heavyName: '九渊天劫', heavyDmg: 60, emoji: '🌑', baseDmg: 15, desc: '最终考验！合理分配真元，运用【状态引爆】向死而生！', boss: true } },
+        { type: 'battle', enemy: { name: '贪妄心魔', hp: 380, acts: ['attack', 'heavy', 'attack', 'heavy'], heavyName: '阴阳寂灭', heavyDmg: 55, emoji: '🌑', baseDmg: 15, desc: '最终考验！它的【阴阳寂灭】不仅伤害极高，还会永久削减你的气血上限！', boss: true } },
         { type: 'vn', scene: [
             { char: '🌑', name: '心魔质问', text: '“修真界弱肉强食，我若不争，何以立足？法器锋利，为何不用？人若不清静，又当如何？”', choices: [
                 { text: '“杀伐果断，以战止战方能立足！”', correct: false },
                 { text: '“不争而善胜，兵者不祥，当常清静。”', correct: true }
             ]}
         ]},
-        // ---------------- 第二卷 ----------------
         { type: 'vn', scene: [
             { char: '🌅', name: '天道提示', text: '“心魔破除，你已正式迈入修真大道。”' },
             { char: '📜', name: '卷轴展开', text: '【第二卷：幽冥鬼府】', bg: '#0f1115' },
             { char: '👤', name: '你', text: '“前方阴气冲天，百鬼夜行。看来这幽冥镇，便是此行的试炼之地了。”' }
         ]},
-        { type: 'battle', enemy: { name: '孤魂野鬼', hp: 280, acts: ['attack', 'weak', 'attack'], heavyName: '', heavyDmg: 0, emoji: '👻', baseDmg: 20, tags: ['ghost'], desc: '【灵体】怪物！对常规物理攻击（非雷、火、水）拥有 50% 免伤！' } },
+        { type: 'battle', enemy: { name: '孤魂野鬼', hp: 280, acts: ['attack', 'heavy', 'attack'], heavyName: '阴风噬魂', heavyDmg: 25, emoji: '👻', baseDmg: 18, tags: ['ghost'], desc: '【灵体】免伤50%物理！它的【阴风噬魂】会附加[迟缓]削弱你下回合的攻防！' } },
         { type: 'upgrade_skills' },
         { type: 'upgrade_stats', pts: 4 },
         { type: 'vn', scene: [
             { char: '👤', name: '你', text: '“普通的游魂尚且如此棘手，深处那股冲天的尸气又是何物？”' },
             { char: '🧟‍♂️', name: '千年飞尸', text: '“生人的血肉......好香......”' }
         ]},
-        { type: 'battle', enemy: { name: '千年飞尸', hp: 450, acts: ['heavy', 'attack', 'heavy'], heavyName: '尸毒重击', heavyDmg: 65, emoji: '🧟‍♂️', baseDmg: 25, tags: ['zombie'], desc: '皮糙肉厚，攻击附带剧毒。起手和每逢三回合必出重击！' } },
+        { type: 'battle', enemy: { name: '千年飞尸', hp: 450, acts: ['heavy', 'attack', 'heavy'], heavyName: '尸毒重击', heavyDmg: 55, emoji: '🧟‍♂️', baseDmg: 22, tags: ['zombie'], desc: '皮糙肉厚。它的【尸毒重击】会附加长达3回合的致命[流血]伤害！' } },
         { type: 'vn', scene: [
             { char: '📜', name: '道藏感悟', text: '“万物负阴而抱阳，冲气以为和。” ——《道德经·第四十二章》', bg: '#1a1c22' }
         ]},
@@ -341,7 +337,7 @@ const DB = {
             { char: '👤', name: '你', text: '“镇子中心的阵眼，就在那里了！”' },
             { char: '🕷️', name: '幽冥鬼母', text: '“咯咯咯...好精纯的道家真气，留下来做我的养料吧！”' }
         ]},
-        { type: 'battle', enemy: { name: '幽冥鬼母', hp: 750, acts: ['attack', 'heavy', 'attack', 'weak', 'heavy'], heavyName: '万鬼噬魂', heavyDmg: 120, emoji: '🕷️', baseDmg: 30, tags: ['ghost'], desc: '【第二卷守关BOSS】极高血量，极高爆发，且拥有灵体免伤。准备苦战！', boss: true } },
+        { type: 'battle', enemy: { name: '幽冥鬼母', hp: 700, acts: ['attack', 'heavy', 'attack', 'heavy'], heavyName: '万鬼噬魂', heavyDmg: 90, emoji: '🕷️', baseDmg: 25, tags: ['ghost'], desc: '【第二卷守关BOSS】极高爆发！【万鬼噬魂】附带强烈的吸血效果，请全力防守！', boss: true } },
         { type: 'vn', scene: [
             { char: '🌑', name: '鬼母诅咒', text: '“咯咯...人死为鬼，鬼死为聻。生生死死，无有穷尽，你杀不完的，何处才是彼岸？！”', choices: [
                 { text: '“杀一个是杀，杀万个也是杀，杀尽天下鬼魅即是彼岸！”', correct: false },
@@ -403,7 +399,6 @@ const game = {
     },
     setSect: (key) => {
         state.sect = key; state.player.skills = [...DB.sects[key].skills]; state.player.sectPass = DB.sects[key].pass;
-        // 【修复 6】：先赋予境界，再计算血量，防止修为倒挂
         state.realmIdx = 1; 
         game.calcStats(); 
         state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi;
@@ -437,10 +432,9 @@ const game = {
                 let div = document.getElementById(id); div.innerHTML = '';
                 for(let k in b) if(b[k]>0) {
                     let s=document.createElement('span'); s.className='buff-tag';
-                    // 修复：确保所有 Buff 都有中文显示，避免叠加超出 1 层限制
                     if(k === 'yinni' && b[k] > 1) b[k] = 1;
                     if(k === 'huajie' && b[k] > 1) b[k] = 1;
-                    let n = {jinguang:'金光', huajie:'化解', yinni:'隐形', liujia:'六甲', leiyin:'雷印', shengji:'生机', chihuan:'迟缓'}[k]||k;
+                    let n = {jinguang:'金光', huajie:'化解', yinni:'隐形', liujia:'六甲', leiyin:'雷印', shengji:'生机', chihuan:'迟缓', liuxie:'流血'}[k]||k;
                     s.textContent=`${n}:${b[k]}`; div.appendChild(s);
                 }
             };
@@ -449,10 +443,20 @@ const game = {
             document.querySelectorAll('.skill-btn').forEach(btn => {
                 let k = btn.dataset.key; let s = DB.skills[k];
                 let cd = state.player.cds[k] || 0;
+                
+                let extraCost = 0;
+                if(k === 'yushu' && state.enemy.buffs['leiyin'] > 0) {
+                    extraCost = Math.min(state.enemy.buffs['leiyin'], Math.floor(Math.max(0, state.player.qi - s.cost) / 5)) * 5;
+                }
+                if(k === 'sanmei' && state.player.buffs['shengji'] > 0) {
+                    extraCost = Math.min(state.player.buffs['shengji'], Math.floor(Math.max(0, state.player.qi - s.cost) / 5)) * 5;
+                }
+                let totalCost = s.cost + extraCost;
+
                 btn.disabled = (state.player.qi < s.cost) || (cd > 0);
                 btn.className = `skill-btn ${k===state.selSkill?'selected':''}`;
                 
-                let cdHtml = cd > 0 ? `<span class="cd-text">冷却 ${cd} 旬</span>` : `真元 -${s.cost}`;
+                let cdHtml = cd > 0 ? `<span class="cd-text">冷却 ${cd} 旬</span>` : `真元 -${totalCost}`;
                 btn.innerHTML = `<strong>${s.name}</strong><br><span style="font-size:0.65rem;color:#5a9ab8;">${cdHtml}</span>`;
 
                 if(k==='tianpeng' && state.player.buffs['jinguang']>0) btn.classList.add('combo');
@@ -498,7 +502,7 @@ const game = {
                 cDiv.appendChild(div);
             });
         }
-        else if(node.type === 'end') { alert("首章与次章测试完毕！后续内容敬请期待。"); location.reload(); }
+        else if(node.type === 'end') { alert("太虚劫核心前两卷测试完毕！敬请关注续作！"); location.reload(); }
     },
     handleDeath: (msg) => {
         document.getElementById('batEnemyIntent').style.display='none';
@@ -628,8 +632,13 @@ const battle = {
         ui.log(`施展 【${s.name}】。`);
 
         let dmg = s.dmg || 0;
-        if(dmg > 0) dmg = Math.floor(dmg * (1 + state.stats.shen * 0.10)); 
-        if(state.player.sectPass === 'shenxiao' && s.tags?.includes('lei')) { dmg = Math.floor(dmg * 1.15); ui.log('【神霄】雷法增伤！'); }
+        if(dmg > 0) {
+            let realmBonus = 1 + (state.realmIdx * 0.15); 
+            let statBonus = 1 + (state.stats.shen * 0.10);  
+            dmg = Math.floor(dmg * realmBonus * statBonus); 
+        }
+        
+        if(state.player.sectPass === 'shenxiao' && s.tags?.includes('lei')) { dmg = Math.floor(dmg * 1.15); ui.log('【神霄】九天轰鸣，雷法威力更盛！'); }
         if(state.player.sectPass === 'longmen') dmg = Math.floor(dmg * (1 + (state.player.hp/state.player.maxHp)*0.2));
         if(state.player.sectPass === 'nanzong' && s.cost > 0) { let h = Math.floor(s.cost * 0.5); state.player.hp = Math.min(state.player.maxHp, state.player.hp+h); }
 
@@ -647,19 +656,37 @@ const battle = {
         if(s.heal || s.buff === 'shengji') ui.playFx('boxPlayer', 'fx-heal', 900); 
 
         if(k === 'tianpeng' && state.player.buffs['jinguang']>0) { state.player.buffs['jinguang']--; dmg *= 2; ui.log('💥 金光化雷，威力翻倍！', 'log-dmg'); }
+        
         if(k === 'yushu' && state.enemy.buffs['leiyin']>0) { 
-            let st = state.enemy.buffs['leiyin']; state.enemy.buffs['leiyin'] = 0; 
-            dmg = Math.floor(dmg * (1 + 0.5 * st)); 
-            ui.log(`⚡ 引爆${st}层[雷印]，玉枢神雷狂暴摧毁！`, 'log-dmg'); 
-            ui.playFx('boxEnemy', 'fx-lightning', 600); 
+            let st = state.enemy.buffs['leiyin'];
+            let maxAfford = Math.floor(state.player.qi / 5); 
+            let actualExplode = Math.min(st, maxAfford);
+            if(actualExplode > 0) {
+                state.player.qi -= (actualExplode * 5);
+                state.enemy.buffs['leiyin'] -= actualExplode;
+                dmg = Math.floor(dmg * (1 + 0.5 * actualExplode));
+                ui.log(`⚡ 【雷霆共鸣】引爆 ${actualExplode} 层雷印！动态追加消耗 ${actualExplode*5} 点真元。`, 'log-dmg');
+                ui.playFx('boxEnemy', 'fx-lightning', 600); 
+            } else {
+                ui.log(`❌ 真元见底，无法供能引爆其余雷印！`, 'log-sys');
+            }
         }
         if(k === 'sanmei' && state.player.buffs['shengji']>0) { 
-            let st = state.player.buffs['shengji']; state.player.buffs['shengji'] = 0; dmg += st * 25; ui.log(`💥 引爆${st}层[生机]，烈火燎原！`, 'log-dmg'); 
-            ui.playFx('boxEnemy', 'fx-fire', 800); 
+            let st = state.player.buffs['shengji'];
+            let maxAfford = Math.floor(state.player.qi / 5);
+            let actualExplode = Math.min(st, maxAfford);
+            if(actualExplode > 0) {
+                state.player.qi -= (actualExplode * 5);
+                state.player.buffs['shengji'] -= actualExplode;
+                dmg += actualExplode * 25;
+                ui.log(`💥 【木火燎原】引爆 ${actualExplode} 层生机！动态追加消耗 ${actualExplode*5} 点真元。`, 'log-dmg');
+                ui.playFx('boxEnemy', 'fx-fire', 800); 
+            } else {
+                ui.log(`❌ 真元见底，无法供能引爆体内生机！`, 'log-sys');
+            }
         }
         if(k === 'yuanshen' && state.player.hp >= state.player.maxHp * 0.9) { dmg *= 2; ui.log('✨ 气血充盈，剑意通神！', 'log-buff'); }
 
-        // 【新增：灵体抗性结算】
         if(dmg > 0 && state.enemy.tags.includes('ghost') && s.type === 'attack') {
             if(!s.tags || (!s.tags.includes('lei') && !s.tags.includes('huo') && !s.tags.includes('shui'))) {
                 dmg = Math.floor(dmg * 0.5);
@@ -703,9 +730,10 @@ const battle = {
         if(state.player.buffs['liujia'] > 0) {
             state.player.buffs['liujia']--; 
             let ljDmg = state.player.sectPass === 'maoshan' ? 25 : 15; 
+            if(state.enemy.tags.includes('ghost')) ljDmg = Math.floor(ljDmg * 0.5);
             state.enemy.hp -= ljDmg;
             ui.playFx('boxEnemy', 'fx-slash', 300);
-            ui.log(`🛡️ 六甲神将斩邪 ${ljDmg} 点。`); ui.float('batEnemyAv', `-${ljDmg}`, 'log-dmg');
+            ui.log(`🛡️ 六甲神将挥动金戈，斩除邪念 ${ljDmg} 点。`); ui.float('batEnemyAv', `-${ljDmg}`, 'log-dmg');
             if(state.enemy.hp <= 0) { 
                 ui.log('战斗胜利！调息片刻，状态回满。', 'log-sys');
                 state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi; state.player.buffs = {}; game.updateUI();
@@ -716,7 +744,7 @@ const battle = {
         if(state.enemy.buffs['leiyin'] > 0) {
             let lDmg = 8; state.enemy.hp -= lDmg; state.enemy.buffs['leiyin']--;
             ui.playFx('boxEnemy', 'fx-lightning', 300);
-            ui.log(`⚡ [雷印]触发，受 ${lDmg} 雷击。`, 'log-dmg'); ui.float('batEnemyAv', `-${lDmg}`, 'log-dmg');
+            ui.log(`⚡ [雷印]交感，引发虚空落雷造成 ${lDmg} 伤害。`, 'log-dmg'); ui.float('batEnemyAv', `-${lDmg}`, 'log-dmg');
             if(state.enemy.hp <= 0) { 
                 ui.log('战斗胜利！调息片刻，状态回满。', 'log-sys');
                 state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi; state.player.buffs = {}; game.updateUI();
@@ -724,41 +752,82 @@ const battle = {
             }
         }
 
+        if(state.player.buffs['liuxie'] > 0) {
+            let lxDmg = 15; state.player.hp = Math.max(0, state.player.hp - lxDmg);
+            state.player.buffs['liuxie']--;
+            ui.log(`🩸 邪毒攻心！[流血] 发作造成 <span class="log-dmg">${lxDmg}</span> 伤害。`, 'log-dmg');
+            ui.float('batPlayerAv', `-${lxDmg}`, 'dmg');
+            ui.playFx('boxPlayer', 'fx-slash', 300);
+            if(state.player.hp <= 0) {
+                setTimeout(() => game.handleDeath('气血枯竭，被邪毒反噬而亡...'), 800);
+                return;
+            }
+        }
+
         let act = state.enemy.acts[state.enemy.turn % state.enemy.acts.length];
         let eDmg = act === 'heavy' ? state.enemy.heavyDmg : act === 'weak' ? 0 : (state.enemy.baseDmg + Math.floor(Math.random()*5));
+        let skillName = act === 'heavy' ? state.enemy.heavyName : '常态扑击';
         
         if(eDmg > 0) {
-            // 玩家躲避与化解逻辑
+            let blocked = false;
             if(state.player.buffs['yinni'] > 0) {
-                state.player.buffs['yinni']--; ui.log('🌫️ 奇门遁形，完美闪避！', 'log-buff'); ui.float('batPlayerAv', '闪避', 'log-buff');
+                state.player.buffs['yinni']--; blocked = true;
+                ui.log(`室有余清！你以奇门形遁，完美闪避了敌方的 【${skillName}】！`, 'log-buff'); ui.float('batPlayerAv', '闪避', 'log-buff');
             } 
             else if(state.player.buffs['huajie'] > 0) {
-                state.player.buffs['huajie']--; let h = 25; state.player.hp = Math.min(state.player.maxHp, state.player.hp+h);
-                ui.log('☯️ 坎离交媾，化解致命一击并回血。', 'log-heal'); ui.float('batPlayerAv', `+${h}化解`, 'log-heal');
+                state.player.buffs['huajie']--; blocked = true;
+                let h = 25; state.player.hp = Math.min(state.player.maxHp, state.player.hp+h);
+                ui.log(`☯️ 运转坎离！完美借力化解了敌方的 【${skillName}】 并反哺气血。`, 'log-heal'); ui.float('batPlayerAv', `+${h}化解`, 'log-heal');
                 ui.playFx('boxPlayer', 'fx-heal', 500);
             }
             else {
-                if(state.enemy.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.enemy.buffs['chihuan']--; } 
+                if(state.player.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.player.buffs['chihuan']--; } 
                 eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.04)); 
                 
                 if(state.player.passive === 'crisis' && state.player.hp < state.player.maxHp*0.3) {
-                    eDmg = Math.floor(eDmg * 0.5); ui.log('【危机直觉】触发，伤害减半！', 'log-buff');
+                    eDmg = Math.floor(eDmg * 0.5); ui.log('【危机直觉】触发，伤重肉体潜能爆发减伤50%！', 'log-buff');
                 }
                 if(state.player.buffs['jinguang'] > 0) {
                     let blk = Math.min(eDmg, 10); eDmg -= blk; state.player.buffs['jinguang']--;
-                    ui.log('✨ 金光抵消了部分伤害。');
+                    ui.log('✨ 金光附体符文流转，抵消了部分魔障煞气。');
                     if(state.player.sectPass === 'longhu') { state.player.hp = Math.min(state.player.maxHp, state.player.hp + 10); ui.float('batPlayerAv', '+10龙虎', 'log-heal'); }
                 }
                 
-                state.player.hp = Math.max(0, state.player.hp - eDmg);
-                ui.log(`敌人攻击，对你造成 <span class="log-dmg">${eDmg}</span> 伤害。`);
-                ui.playFx('boxPlayer', 'fx-slash', 300); 
-                ui.float('batPlayerAv', `-${eDmg}`, 'log-dmg');
-                document.getElementById('batPlayerAv').classList.add('shake-fx');
-                setTimeout(()=>document.getElementById('batPlayerAv').classList.remove('shake-fx'), 300);
+                if(eDmg > 0) {
+                    state.player.hp = Math.max(0, state.player.hp - eDmg);
+                    ui.log(`👹 敌人驭动神通 【${skillName}】，对你造成 <span class="log-dmg">${eDmg}</span> 损伤。`);
+                    ui.playFx('boxPlayer', 'fx-slash', 300); 
+                    ui.float('batPlayerAv', `-${eDmg}`, 'log-dmg');
+                    document.getElementById('batPlayerAv').classList.add('shake-fx');
+                    setTimeout(()=>document.getElementById('batPlayerAv').classList.remove('shake-fx'), 300);
+
+                    // 敌方重击的特殊负面效果
+                    if(act === 'heavy') {
+                        if(state.enemy.name === '嚣张师兄') {
+                            state.player.qi = Math.max(0, state.player.qi - 20);
+                            ui.log('⚠️ 猛虎拳意霸道！强行震散了你 20 点真元！', 'log-sys');
+                            ui.float('batPlayerAv', '-20蓝', 'dmg');
+                        } else if(state.enemy.name === '嗜血狼妖' || state.enemy.name === '千年飞尸') {
+                            state.player.buffs['liuxie'] = (state.player.buffs['liuxie'] || 0) + 2;
+                            ui.log('⚠️ 伤口被妖气感染！陷入 [流血] 状态。', 'log-sys');
+                        } else if(state.enemy.name === '孤魂野鬼') {
+                            state.player.buffs['chihuan'] = (state.player.buffs['chihuan'] || 0) + 2;
+                            ui.log('⚠️ 阴风入体！陷入 [迟缓] 状态。', 'log-sys');
+                        } else if(state.enemy.name === '幽冥鬼母') {
+                            let drain = Math.floor(eDmg * 0.5);
+                            state.enemy.hp = Math.min(state.enemy.maxHp, state.enemy.hp + drain);
+                            ui.log(`⚠️ 鬼母吞噬生魂，恢复了 ${drain} 点气血！`, 'log-sys');
+                            ui.float('batEnemyAv', `+${drain}`, 'heal');
+                        } else if(state.enemy.name === '贪妄心魔') {
+                            state.player.maxHp = Math.max(50, state.player.maxHp - 10);
+                            if(state.player.hp > state.player.maxHp) state.player.hp = state.player.maxHp;
+                            ui.log('⚠️ 劫雷伤及本源！气血上限永久 -10！', 'log-sys');
+                        }
+                    }
+                }
             }
         } else {
-            ui.log(`敌人正在观察，未发动攻击。`);
+            ui.log(`敌人周身黑气缭绕，正在蓄力窥伺。`);
         }
 
         let recQi = 5 + (state.player.passive === 'scholar' ? 5 : 0);
@@ -772,7 +841,7 @@ const battle = {
         state.enemy.turn++; battle.updateIntent(); game.updateUI();
 
         if(state.player.hp <= 0) {
-            game.handleDeath('气血耗尽，身死道消...');
+            game.handleDeath('力竭不支，真灵溃散，身死道消...');
         } else {
             document.querySelectorAll('.skill-btn').forEach(b=>b.disabled=(state.player.qi < DB.skills[b.dataset.key].cost));
         }
