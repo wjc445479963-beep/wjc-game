@@ -77,7 +77,7 @@
         .btn-primary { flex: 2; background: linear-gradient(90deg, #8b6b43, #634b30); color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-secondary { flex: 1; background: #222; color: #aaa; border: 1px solid #444; padding: 10px; border-radius: 6px; cursor: pointer; }
         .skill-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-bottom: 10px; }
-        .skill-btn { background: #1a1c22; border: 1px solid #444; color: #dcd0b8; padding: 10px 4px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; position: relative; }
+        .skill-btn { background: #1a1c22; border: 1px solid #444; color: #dcd0b8; padding: 10px 4px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; position: relative; font-family: inherit; }
         .skill-btn:hover:not(:disabled) { border-color: #8b6b43; }
         .skill-btn.selected { border-color: #d4af37; background: #2a241a; }
         .skill-btn:disabled { opacity: 0.4; filter: grayscale(100%); pointer-events: none; }
@@ -150,7 +150,7 @@
             
             <div class="sect-group">【全真道统】 - 内丹与性命双修</div>
             <div class="card" onclick="game.setSect('longmen')">
-                <h3>全真龙门</h3><p>【连绵不绝】抱元守一，满血元神剑气。<br><span style="color:#d4af37">被动: 气血>=90%时，伤害极大幅加成</span></p>
+                <h3>全真龙门</h3><p>【连绵不绝】抱元守一，满血元神剑气。<br><span style="color:#d4af37">被动: 气血越高，伤害加成越高</span></p>
             </div>
             <div class="card" onclick="game.setSect('nanzong')">
                 <h3>紫阳南宗</h3><p>【木火相生】甲木生机，三昧真火燎原。<br><span style="color:#d4af37">被动: 每次耗蓝的50%转化为回血</span></p>
@@ -254,16 +254,12 @@ const DB = {
         dao_punch: { name: '道门基础', cost: 0, desc: '【普攻】运转周天造成15伤，恢复10真元。', type: 'attack', dmg: 15 },
         jinguang: { name: '金光神咒', cost: 15, desc: '【防御】获得2层[金光]护盾(抵挡10伤/层)。', type: 'defend', buff: 'jinguang', stacks: 2 },
         tianpeng: { name: '天蓬神咒', cost: 25, desc: '【爆发】造成22伤。若有[金光]，消耗1层使伤害翻倍！', type: 'attack', tags: ['lei'], dmg: 22 },
-        // 修复神霄派的逻辑
         zhaolei: { name: '召雷符', cost: 10, cd: 2, desc: '【削弱】造成10伤，给敌挂3层[雷印](每回受8雷击)。冷却2回。', type: 'attack', tags: ['lei'], dmg: 10, debuff: 'leiyin', stacks: 3 },
         yushu: { name: '玉枢神雷', cost: 30, desc: '【爆发】造成25伤。引爆敌方所有[雷印]，每层雷印使本技能伤害额外提升50%！', type: 'attack', tags: ['lei'], dmg: 25 },
-        // 修复龙门派的逻辑
         shouyi: { name: '抱元守一', cost: 10, desc: '【恢复】直接恢复40气血。', type: 'support', heal: 40 },
         yuanshen: { name: '元神剑气', cost: 20, desc: '【爆发】造成20伤。若你气血 >= 90%，剑意通神伤害翻倍。', type: 'attack', dmg: 20 },
-        // 修复南宗逻辑
         jiamu: { name: '甲木真气', cost: 15, desc: '【辅助】获得4层[生机](每回合恢复5点气血)。', type: 'support', buff: 'shengji', stacks: 4 },
         sanmei: { name: '三昧真火', cost: 25, desc: '【爆发】造成20火伤。引爆所有[生机]，每层附加25点真实伤害。', type: 'attack', tags: ['huo'], dmg: 20 },
-        
         kanli: { name: '坎离交媾', cost: 20, desc: '【防御】化解下次敌方攻击并恢复25气血。', type: 'defend', buff: 'huajie', stacks: 1 },
         dunjia: { name: '奇门遁甲', cost: 20, desc: '【防御】遁入虚空，获得[隐匿](免疫下一次伤害)。', type: 'defend', buff: 'yinni', stacks: 1 },
         liujia: { name: '六丁六甲', cost: 30, cd: 4, desc: '【召唤】持续3回，每回自动斩邪15点。冷却4回。', type: 'support', buff: 'liujia', stacks: 3 },
@@ -399,7 +395,7 @@ const game = {
                 if(k==='tianpeng' && state.player.buffs['jinguang']>0) btn.classList.add('combo');
                 if(k==='yushu' && state.enemy.buffs['leiyin']>0) btn.classList.add('combo');
                 if(k==='sanmei' && state.player.buffs['shengji']>0) btn.classList.add('combo');
-                if(k==='yuanshen' && state.player.hp >= state.player.maxHp * 0.9) btn.classList.add('combo'); // 修复龙门判定为 90%
+                if(k==='yuanshen' && state.player.hp >= state.player.maxHp * 0.9) btn.classList.add('combo'); 
             });
             if(state.selSkill) {
                 let s = DB.skills[state.selSkill];
@@ -506,7 +502,9 @@ const battle = {
         battle.cancelSkill(); battle.updateIntent();
         let sBox = document.getElementById('batSkills'); sBox.innerHTML = '';
         state.player.skills.forEach(k => {
-            let btn = document.createElement('button'); btn.dataset.key = k;
+            let btn = document.createElement('button'); 
+            btn.className = 'skill-btn'; // FIX: Ensure class is applied immediately
+            btn.dataset.key = k;
             btn.onclick = () => battle.selectSkill(k); sBox.appendChild(btn);
         });
         game.updateUI();
@@ -549,7 +547,6 @@ const battle = {
         if(k === 'dao_punch') state.player.qi = Math.min(state.player.maxQi, state.player.qi + 10);
         if(k === 'taiqing') state.player.qi = Math.min(state.player.maxQi, state.player.qi + 25);
         
-        // 修复生机赋予逻辑：改为赋予4层
         if(s.buff) { state.player.buffs[s.buff] = (state.player.buffs[s.buff]||0) + s.stacks; ui.float('batPlayerAv', '+状态', 'log-buff'); }
         if(s.debuff) { state.enemy.buffs[s.debuff] = (state.enemy.buffs[s.debuff]||0) + s.stacks; ui.float('batEnemyAv', '-状态', 'log-sys'); }
         if(s.heal) { state.player.hp = Math.min(state.player.maxHp, state.player.hp + s.heal); ui.float('batPlayerAv', `+${s.heal}`, 'log-heal'); }
@@ -561,7 +558,6 @@ const battle = {
             ui.log(`⚡ 引爆${st}层[雷印]，玉枢神雷狂暴摧毁！`, 'log-dmg'); 
         }
         if(k === 'sanmei' && state.player.buffs['shengji']>0) { let st = state.player.buffs['shengji']; state.player.buffs['shengji'] = 0; dmg += st * 25; ui.log(`💥 引爆${st}层[生机]，烈火燎原！`, 'log-dmg'); }
-        // 修复龙门派的元神判定为 >= 90%
         if(k === 'yuanshen' && state.player.hp >= state.player.maxHp * 0.9) { dmg *= 2; ui.log('✨ 气血充盈，剑意通神！', 'log-buff'); }
 
         if(dmg > 0) {
@@ -587,7 +583,6 @@ const battle = {
         }
     },
     enemyTurn: () => {
-        // 修复南宗：生机现在扣除后仍能正常连招
         if(state.player.buffs['shengji'] > 0) {
             let shHeal = 5; state.player.hp = Math.min(state.player.maxHp, state.player.hp + shHeal);
             state.player.buffs['shengji']--;
@@ -620,7 +615,6 @@ const battle = {
         let eDmg = act === 'heavy' ? state.enemy.heavyDmg : act === 'weak' ? 0 : (state.enemy.baseDmg + Math.floor(Math.random()*5));
         
         if(eDmg > 0) {
-            // 修复清微：提示更加醒目
             if(state.player.buffs['yinni'] > 0) {
                 state.player.buffs['yinni']--; ui.log('🌫️ 奇门遁形，完美闪避！', 'log-buff'); ui.float('batPlayerAv', '闪避', 'log-buff');
             } 
