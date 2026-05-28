@@ -43,7 +43,7 @@
         .tag.golden { color: #d4af37; border-color: #d4af37; background: rgba(212,175,55,0.1); }
         .sect-group { grid-column: span 2; font-size: 0.9rem; color: #8b6b43; border-bottom: 1px dashed #423526; padding-bottom: 4px; margin-top: 10px; }
         
-        /* 对话系统 */
+        /* 对话系统 (VN) */
         .vn-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; position: relative; padding-bottom: 20px; }
         .vn-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 30%; background-position: center; background-size: cover; border-radius: 8px; opacity: 0.6; mask-image: linear-gradient(to bottom, black 50%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); transition: background-image 0.5s ease; }
         .vn-character { position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); font-size: 8rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: opacity 0.3s, transform 0.3s; }
@@ -52,6 +52,9 @@
         .vn-speaker { position: absolute; top: -15px; left: 15px; background: #16181d; border: 1px solid #d4af37; color: #d4af37; padding: 4px 16px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; }
         .vn-text { font-size: 1.05rem; line-height: 1.8; color: #dcd0b8; margin-top: 10px; }
         .vn-hint { position: absolute; bottom: 10px; right: 15px; font-size: 0.75rem; color: #666; animation: blink 1.5s infinite; }
+        .vn-choices { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .choice-btn { background: linear-gradient(90deg, #1f1812, #120e0a); border: 1px solid #634b30; color: #d6c6ad; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; text-align: left; transition: 0.2s; }
+        .choice-btn:hover { border-color: #8b6b43; padding-left: 15px; color: #f0e6d2; }
         @keyframes blink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
 
         /* 战斗系统 */
@@ -100,7 +103,6 @@
 </head>
 <body>
 <div id="game-app">
-    <!-- 顶部常驻状态 -->
     <div class="top-bar" id="topBar" style="display: none;">
         <div class="realm-badge" onclick="ui.openModal('statsModal')" id="uiRealm">未入道</div>
         <div class="status-area">
@@ -133,7 +135,7 @@
         </div>
     </div>
 
-    <!-- 视图2：门派选择 (6宗门精修) -->
+    <!-- 视图2：门派选择 -->
     <div class="view" id="view-sect">
         <h1 class="title">拜入仙门</h1>
         <p class="sub-title" id="originDescText">带着凡尘的牵绊，你终于踏上了寻仙之路...</p>
@@ -169,7 +171,7 @@
         <div class="vn-container">
             <div class="vn-bg" id="vnBg"></div>
             <div class="vn-character" id="vnChar">👤</div>
-            <div class="vn-dialogue-box" onclick="vn.next()">
+            <div class="vn-dialogue-box" id="vnBox">
                 <div class="vn-speaker" id="vnSpeaker">名字</div>
                 <div class="vn-text" id="vnText">剧情文本内容...</div>
                 <div class="vn-hint">点击继续 ▼</div>
@@ -223,7 +225,6 @@
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>☯️ 灵台内视 · 自由加点</h3>
         <p style="text-align:center; color:#aaa; font-size:0.85rem; margin-bottom:15px;">可用悟性点: <span id="uiStatPts" style="color:#d4af37; font-size:1.2rem; font-weight:bold;">0</span></p>
-        
         <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">体魄</span><span class="stat-desc">每点+15血上限</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('ti',-1)">-</button><span class="s-val" id="uiStatTi">0</span><button class="s-btn" onclick="game.addStat('ti',1)">+</button></div></div>
         <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">炁海</span><span class="stat-desc">每点+10蓝上限</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('qi',-1)">-</button><span class="s-val" id="uiStatQi">0</span><button class="s-btn" onclick="game.addStat('qi',1)">+</button></div></div>
         <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">神识</span><span class="stat-desc">每点+5%最终伤害</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('shen',-1)">-</button><span class="s-val" id="uiStatShen">0</span><button class="s-btn" onclick="game.addStat('shen',1)">+</button></div></div>
@@ -233,7 +234,6 @@
 </div>
 
 <script>
-/* ================= 核心数据字典 ================= */
 const DB = {
     realms: ['未入道', '入门弟子', '练气小成', '练气大圆满', '筑基真人', '结丹宗师'],
     origins: {
@@ -266,44 +266,49 @@ const DB = {
         wulei: { name: '五雷正法', cost: 40, desc: '【绝学】造成50点毁灭雷伤！', type: 'attack', tags: ['lei'], dmg: 50 },
         taiqing: { name: '太清真气', cost: 0, desc: '【调息】不攻击，直接恢复25点真元。', type: 'support', heal: 0 }
     },
-    // 剧本节点
     script: [
-        { type: 'vn', scene: [
-            { char: '🧔', name: '传功长老', text: '“既然拜入我宗，这尊百年铁木人桩，你且全力击打，让我看看成色！”' }
-        ]},
-        { type: 'battle', enemy: { name: '铁木人桩', hp: 80, acts: ['weak', 'weak'], heavyName: '', heavyDmg: 0, emoji: '🪵', baseDmg: 5, desc: '毫无威胁，正好用来熟悉【状态叠加】与【真元调息】。' } },
+        // 0-2: 入门测试与感悟
+        { type: 'vn', scene: [{ char: '🧔', name: '传功长老', text: '“这尊铁木人桩，你且全力击打，让我看看成色！”' }] },
+        { type: 'battle', enemy: { name: '铁木人桩', hp: 80, acts: ['weak', 'weak'], heavyName: '', heavyDmg: 0, emoji: '🪵', baseDmg: 5, desc: '毫无威胁，请熟悉【法术】与每回合的【周天恢复】。' } },
+        { type: 'vn', scene: [{ char: '📜', name: '道藏感悟', text: '“老君曰：大道无形，生育天地... 人能常清静，天地悉皆归。” ——《太上老君说常清静经》', bg: '#1a1c22' }] },
         { type: 'upgrade_stats', pts: 2 },
+        // 4-8: 宗门大比与感悟
         { type: 'vn', scene: [
-            { char: '🦹', name: '嚣张师兄', text: '“就凭你这刚入门的新人，也妄图染指这枚筑基丹？给我乖乖躺下！”' },
-            { char: '👤', name: '你', text: '“大巧若拙，师兄太过浮躁了。”' }
+            { char: '🦹', name: '嚣张师兄', text: '“就凭你这新人，也妄图染指筑基丹？给我乖乖躺下！”' },
+            { char: '👤', name: '你', text: '“师兄，你太过浮躁了。”' }
         ]},
         { type: 'battle', enemy: { name: '嚣张师兄', hp: 160, acts: ['attack', 'heavy', 'attack'], heavyName: '猛虎出匣', heavyDmg: 45, emoji: '🦹', baseDmg: 15, desc: '蓄力时伤害极高，务必使用【防御/化解/隐匿】法术规避！' } },
         { type: 'vn', scene: [
-            { char: '🦹', name: '嚣张师兄', text: '“怎么可能...你一直在隐藏实力？！”' },
-            { char: '👥', name: '围观弟子', text: '“嘶...此子恐怖如斯！竟然越阶战胜了师兄！”' }
+            { char: '👥', name: '围观弟子', text: '“嘶...竟然越阶战胜了师兄！”' },
+            { char: '📜', name: '道藏感悟', text: '“上善若水。水善利万物而不争，处众人之所恶，故几于道。” ——《道德经·第八章》', bg: '#1a1c22' }
         ]},
         { type: 'upgrade_skills' },
         { type: 'upgrade_stats', pts: 3 },
+        // 9-14: 降妖与最终考核
         { type: 'vn', scene: [
-            { char: '📜', name: '宗门玉简', text: '“山下百里荒村频现妖氛。命外门精锐前往查探...”' },
-            { char: '🐺', name: '嗜血狼妖', text: '“吼！！细皮嫩肉的修士，正好做我的血食！”' }
+            { char: '📜', name: '宗门玉简', text: '“山下百里荒村频现妖氛。命精锐前往查探...”' },
+            { char: '🐺', name: '嗜血狼妖', text: '“吼！！正好做我的血食！”' }
         ]},
-        { type: 'battle', enemy: { name: '嗜血狼妖', hp: 320, acts: ['heavy', 'attack', 'attack'], heavyName: '血月狂抓', heavyDmg: 60, emoji: '🐺', baseDmg: 20, desc: '起手就是致命重击，开局必须防守！' } },
+        { type: 'battle', enemy: { name: '嗜血狼妖', hp: 260, acts: ['heavy', 'attack', 'attack'], heavyName: '血月狂抓', heavyDmg: 45, emoji: '🐺', baseDmg: 18, desc: '起手重击！它的血量经过削弱，运用周天循环稳扎稳打。' } },
         { type: 'vn', scene: [
-            { char: '👤', name: '你', text: '“妖物已除，但此地煞气未散...不好，是劫数临头！”' },
+            { char: '📜', name: '道藏感悟', text: '“夫佳兵者，不祥之器，物或恶之，故有道者不处。” ——《道德经·第三十一章》', bg: '#1a1c22' },
             { char: '🌩️', name: '天地异象', text: '（黑云压城，雷劫将至，心魔自灵台涌现！）' }
         ]},
-        { type: 'battle', enemy: { name: '贪妄心魔', hp: 500, acts: ['attack', 'heavy', 'attack', 'heavy'], heavyName: '九渊天劫', heavyDmg: 100, emoji: '🌑', baseDmg: 25, desc: '最终考验！合理分配真元，运用【状态引爆】向死而生！', boss: true } },
+        { type: 'battle', enemy: { name: '贪妄心魔', hp: 450, acts: ['attack', 'heavy', 'attack', 'heavy'], heavyName: '九渊天劫', heavyDmg: 90, emoji: '🌑', baseDmg: 20, desc: '最终考验！合理分配真元，运用【状态引爆】向死而生！', boss: true } },
+        // 14: 终极道藏问答
         { type: 'vn', scene: [
-            { char: '🌅', name: '天道提示', text: '“心魔消散，大道可期。太虚劫首测通关！”' }
+            { char: '🌑', name: '心魔质问', text: '“修真界弱肉强食，我若不争，何以立足？法器锋利，为何不用？人若不清静，又当如何？”', choices: [
+                { text: '“杀伐果断，以战止战方能立足！”', correct: false },
+                { text: '“常清静，不争而善胜，兵者不祥。”', correct: true }
+            ]}
         ]},
+        { type: 'vn', scene: [{ char: '🌅', name: '天道提示', text: '“心魔彻底消散，大道可期。太虚劫首测完美通关！”' }] },
         { type: 'end' }
     ]
 };
 
 let state = {
-    origin: '', sect: '', realmIdx: 0,
-    stats: { ti: 0, qi: 0, shen: 0, gen: 0, unspent: 0 },
+    origin: '', sect: '', realmIdx: 0, stats: { ti: 0, qi: 0, shen: 0, gen: 0, unspent: 0 },
     player: { hp: 150, maxHp: 150, qi: 80, maxQi: 80, skills: [], buffs: {}, passive: '', sectPass: '' },
     enemy: { hp: 100, maxHp: 100, acts: [], turn: 0, buffs: {} },
     nodeIdx: 0, vnStep: 0, selSkill: null, isScriptPaused: false
@@ -338,7 +343,6 @@ const game = {
     setOrigin: (key) => {
         state.origin = key; let o = DB.origins[key];
         state.stats = { ...o.stats, unspent: 0 }; state.player.passive = o.passive;
-        document.getElementById('originDescText').textContent = `带着【${o.name}】的宿命，踏上寻仙路...`;
         ui.show('view-sect');
     },
     setSect: (key) => {
@@ -432,8 +436,40 @@ const vn = {
         document.getElementById('vnChar').textContent = line.char;
         document.getElementById('vnSpeaker').textContent = line.name;
         document.getElementById('vnText').innerHTML = ''; 
+        
+        let existingChoices = document.getElementById('vnChoices');
+        if(existingChoices) existingChoices.remove();
+        
         let text = line.text; let i = 0; let el = document.getElementById('vnText');
-        function typeWriter() { if(i < text.length) { el.innerHTML += text.charAt(i); i++; setTimeout(typeWriter, 20); } }
+        function typeWriter() { 
+            if(i < text.length) { 
+                el.innerHTML += text.charAt(i); i++; setTimeout(typeWriter, 15); 
+            } else if (line.choices) {
+                // 渲染选项
+                document.querySelector('.vn-hint').style.display = 'none';
+                document.getElementById('vnBox').onclick = null;
+                let cDiv = document.createElement('div'); cDiv.id = 'vnChoices'; cDiv.className = 'vn-choices';
+                line.choices.forEach(c => {
+                    let btn = document.createElement('div'); btn.className = 'choice-btn'; btn.textContent = c.text;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        if(c.correct) {
+                            state.vnStep++; vn.render();
+                        } else {
+                            // 答错惩罚
+                            ui.float('vnChar', '-道心', 'log-dmg');
+                            state.player.hp = Math.max(1, state.player.hp - 20); game.updateUI();
+                            el.innerHTML = `<span style="color:#d65c5c">“执迷不悟！再给你一次机会！”</span><br><br>` + line.text;
+                        }
+                    };
+                    cDiv.appendChild(btn);
+                });
+                el.appendChild(cDiv);
+            } else {
+                document.querySelector('.vn-hint').style.display = 'block';
+                document.getElementById('vnBox').onclick = vn.next;
+            }
+        }
         typeWriter();
     },
     next: () => { state.vnStep++; vn.render(); }
@@ -520,7 +556,7 @@ const battle = {
         game.updateUI();
         if(state.enemy.hp <= 0) {
             document.getElementById('batEnemyIntent').style.display='none';
-            ui.log('战斗胜利！就地调息，气血与真元已完全恢复。', 'log-sys');
+            ui.log('战斗胜利！就地调息，状态回满。', 'log-sys');
             state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi; state.player.buffs = {}; game.updateUI();
             setTimeout(() => { state.nodeIdx++; game.runNode(); }, 2000);
         } else {
@@ -529,32 +565,29 @@ const battle = {
         }
     },
     enemyTurn: () => {
-        // Player HoT (生机)
         if(state.player.buffs['shengji'] > 0) {
             let shHeal = 5; state.player.hp = Math.min(state.player.maxHp, state.player.hp + shHeal);
             state.player.buffs['shengji']--;
             ui.log(`🌿 [生机]流转，恢复 ${shHeal} 气血。`, 'log-heal'); ui.float('batPlayerAv', `+${shHeal}`, 'log-heal');
         }
 
-        // 护法伤害
         if(state.player.buffs['liujia'] > 0) {
             state.player.buffs['liujia']--; 
             let ljDmg = state.player.sectPass === 'maoshan' ? 25 : 15; 
             state.enemy.hp -= ljDmg;
             ui.log(`🛡️ 六甲神将斩邪 ${ljDmg} 点。`); ui.float('batEnemyAv', `-${ljDmg}`, 'log-dmg');
             if(state.enemy.hp <= 0) { 
-                ui.log('战斗胜利！就地调息，气血与真元已完全恢复。', 'log-sys');
+                ui.log('战斗胜利！', 'log-sys');
                 state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi; state.player.buffs = {}; game.updateUI();
                 setTimeout(() => { state.nodeIdx++; game.runNode(); }, 2000); return; 
             }
         }
 
-        // Enemy DoT (雷印)
         if(state.enemy.buffs['leiyin'] > 0) {
             let lDmg = 8; state.enemy.hp -= lDmg; state.enemy.buffs['leiyin']--;
-            ui.log(`⚡ [雷印]触发，天雷降下造成 ${lDmg} 伤害。`, 'log-dmg'); ui.float('batEnemyAv', `-${lDmg}`, 'log-dmg');
+            ui.log(`⚡ [雷印]触发，受 ${lDmg} 雷击。`, 'log-dmg'); ui.float('batEnemyAv', `-${lDmg}`, 'log-dmg');
             if(state.enemy.hp <= 0) { 
-                ui.log('战斗胜利！就地调息，气血与真元已完全恢复。', 'log-sys');
+                ui.log('战斗胜利！', 'log-sys');
                 state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi; state.player.buffs = {}; game.updateUI();
                 setTimeout(() => { state.nodeIdx++; game.runNode(); }, 2000); return; 
             }
@@ -572,7 +605,7 @@ const battle = {
                 ui.log('☯️ 坎离交媾，化解致命一击并回血。', 'log-heal'); ui.float('batPlayerAv', `+${h}化解`, 'log-heal');
             }
             else {
-                if(state.enemy.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.enemy.buffs['chihuan']--; } // 迟缓减伤
+                if(state.enemy.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.enemy.buffs['chihuan']--; } 
                 eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.03)); 
                 
                 if(state.player.passive === 'crisis' && state.player.hp < state.player.maxHp*0.3) {
@@ -594,8 +627,12 @@ const battle = {
             ui.log(`敌人正在观察，未发动攻击。`);
         }
 
-        let recQi = 5 + (state.player.passive === 'scholar' ? 5 : 0);
+        // ================= 核心更新：周天循环回复 =================
+        let recQi = 10 + (state.player.passive === 'scholar' ? 5 : 0);
+        let recHp = 5 + Math.floor(state.player.maxHp * 0.03); // 每回合稳定回血
         state.player.qi = Math.min(state.player.maxQi, state.player.qi + recQi); 
+        state.player.hp = Math.min(state.player.maxHp, state.player.hp + recHp);
+        ui.log(`【周天循环】气血 <span class="log-heal">+${recHp}</span>，真元 <span class="log-sys">+${recQi}</span>。`);
         
         state.enemy.turn++; battle.updateIntent(); game.updateUI();
 
