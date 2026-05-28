@@ -55,12 +55,11 @@
         .vn-choices { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
         .choice-btn { background: linear-gradient(90deg, #1f1812, #120e0a); border: 1px solid #634b30; color: #d6c6ad; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; text-align: left; transition: 0.2s; }
         .choice-btn:hover { border-color: #8b6b43; padding-left: 15px; color: #f0e6d2; }
-        @keyframes blink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
 
         /* 战斗系统 */
         .battle-stage { display: flex; justify-content: space-between; align-items: flex-end; padding: 10px 0 20px; border-bottom: 1px dashed #4a3826; margin-bottom: 12px; }
         .combatant { text-align: center; width: 45%; position: relative; }
-        .combatant .avatar { font-size: 3.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.05)); transition: 0.3s; }
+        .combatant .avatar { font-size: 3.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.05)); transition: 0.3s; position: relative; z-index: 2; }
         .intent-box { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #d65c5c; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; color: #ff8888; white-space: nowrap; z-index: 5; }
         .intent-box.charge { border-color: #d4af37; color: #d4af37; font-weight: bold; animation: shake 1s infinite; }
         .buff-zone { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 8px; min-height: 22px; }
@@ -83,7 +82,7 @@
         .skill-btn:disabled { opacity: 0.4; filter: grayscale(100%); pointer-events: none; }
         .skill-btn.combo { border-color: #d65c5c; box-shadow: 0 0 10px rgba(214,92,92,0.3); }
 
-        /* 模态框 */
+        /* 模态框 (包含死亡弹窗) */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
         .modal-content { background: #16181d; border: 2px solid #524231; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; }
         .modal h3 { color: #d4af37; text-align: center; margin-bottom: 16px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
@@ -95,8 +94,22 @@
         .s-btn { background: #222; border: 1px solid #555; color: #d4af37; width: 26px; height: 26px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .s-val { width: 20px; text-align: center; font-weight: bold; color: #fff; }
 
+        /* 光效动画 */
         @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-3px);} 40%,80%{transform:translateX(3px);} }
+        .shake-fx { animation: shake 0.3s; }
+        @keyframes anim-slash { 0% { transform: translate(-50%, -50%) scale(0.5) rotate(-45deg); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.2) rotate(-45deg); opacity: 1; filter: brightness(2); } 100% { transform: translate(-50%, -50%) scale(1.5) rotate(-45deg); opacity: 0; } }
+        .fx-slash { position: absolute; top: 40%; left: 50%; width: 120px; height: 8px; background: linear-gradient(90deg, transparent, #fff, #d4af37, transparent); animation: anim-slash 0.3s ease-out forwards; pointer-events: none; z-index: 50; }
+        @keyframes anim-lightning { 0% { opacity: 0; transform: translate(-50%, -50%) scaleY(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scaleY(1.5); filter: brightness(3); background: #fff; } 40% { opacity: 0; } 60% { opacity: 1; transform: translate(-50%, -50%) scaleY(1.2) translateX(10px); } 100% { opacity: 0; } }
+        .fx-lightning { position: absolute; top: 50%; left: 50%; width: 25px; height: 200px; background: #00e5ff; box-shadow: 0 0 20px #00e5ff, 0 0 40px #fff; border-radius: 50%; animation: anim-lightning 0.4s ease-out forwards; pointer-events: none; z-index: 50; }
+        @keyframes anim-fire { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } }
+        .fx-fire { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; background: radial-gradient(circle, #fff, #ff9800, #ff2a00, transparent 70%); border-radius: 50%; animation: anim-fire 0.5s ease-out forwards; pointer-events: none; z-index: 50; mix-blend-mode: screen; }
+        @keyframes anim-shield { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; border-width: 15px; } 100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; border-width: 1px; } }
+        .fx-shield { position: absolute; top: 50%; left: 50%; width: 120px; height: 120px; border: 4px solid #d4af37; box-shadow: 0 0 20px #d4af37, inset 0 0 20px #d4af37; border-radius: 50%; animation: anim-shield 0.6s ease-out forwards; pointer-events: none; z-index: 50; }
+        @keyframes anim-heal { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 50% { transform: translate(-50%, -80%) scale(1.2); opacity: 0.8; } 100% { transform: translate(-50%, -120%) scale(1.5); opacity: 0; } }
+        .fx-heal { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; background: radial-gradient(circle, #8bc34a, transparent 60%); animation: anim-heal 0.8s ease-out forwards; pointer-events: none; z-index: 50; mix-blend-mode: screen; }
+
         @keyframes pulseGlow { 0%{box-shadow:0 0 0 0 rgba(212,175,55,0.7);} 70%{box-shadow:0 0 0 8px rgba(212,175,55,0);} 100%{box-shadow:0 0 0 0 rgba(212,175,55,0);} }
+        @keyframes blink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
         .floating-text { position: absolute; font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px 2px #000; z-index: 100; animation: floatUp 1s forwards; pointer-events: none; }
         @keyframes floatUp { 0%{opacity:1; transform:translateY(0) scale(1);} 100%{opacity:0; transform:translateY(-40px) scale(1.2);} }
     </style>
@@ -112,7 +125,6 @@
         <div class="btn-icon" id="btnStats" onclick="ui.openModal('statsModal')">修</div>
     </div>
 
-    <!-- 视图1：身世选择 -->
     <div class="view active" id="view-origin">
         <h1 class="title">三千道藏：太虚劫</h1>
         <p class="sub-title">第一卷：凡尘溯源</p>
@@ -135,7 +147,6 @@
         </div>
     </div>
 
-    <!-- 视图2：门派选择 -->
     <div class="view" id="view-sect">
         <h1 class="title">拜入仙门</h1>
         <p class="sub-title" id="originDescText">带着凡尘的牵绊，你终于踏上了寻仙之路...</p>
@@ -147,7 +158,6 @@
             <div class="card" onclick="game.setSect('shenxiao')">
                 <h3>正一神霄</h3><p>【极致爆发】召雷成印，玉枢神雷毁灭。<br><span style="color:#d4af37">被动: 雷法伤害额外提升15%</span></p>
             </div>
-            
             <div class="sect-group">【全真道统】 - 内丹与性命双修</div>
             <div class="card" onclick="game.setSect('longmen')">
                 <h3>全真龙门</h3><p>【连绵不绝】抱元守一，满血元神剑气。<br><span style="color:#d4af37">被动: 气血越高，伤害加成越高</span></p>
@@ -155,7 +165,6 @@
             <div class="card" onclick="game.setSect('nanzong')">
                 <h3>紫阳南宗</h3><p>【木火相生】甲木生机，三昧真火燎原。<br><span style="color:#d4af37">被动: 每次耗蓝的50%转化为回血</span></p>
             </div>
-
             <div class="sect-group">【上清大洞】 - 奇门与驱邪</div>
             <div class="card" onclick="game.setSect('maoshan')">
                 <h3>上清茅山</h3><p>【遁甲召唤】奇门隐匿，役使六甲神将。<br><span style="color:#d4af37">被动: 神将等召唤物伤害大幅提升</span></p>
@@ -166,7 +175,6 @@
         </div>
     </div>
 
-    <!-- 视图3：剧情对话 (VN) -->
     <div class="view" id="view-vn" style="padding: 0;">
         <div class="vn-container">
             <div class="vn-bg" id="vnBg"></div>
@@ -179,16 +187,15 @@
         </div>
     </div>
 
-    <!-- 视图4：战斗系统 -->
     <div class="view" id="view-battle">
         <div class="battle-stage">
-            <div class="combatant">
+            <div class="combatant" id="boxPlayer">
                 <div class="avatar" id="batPlayerAv">🧘‍♂️</div>
                 <div class="name">你 (修行中)</div>
                 <div class="buff-zone" id="batPlayerBuff"></div>
             </div>
-            <div style="font-weight:bold; color:#8b6b43; font-size:1.5rem; font-style:italic;">VS</div>
-            <div class="combatant">
+            <div style="font-weight:bold; color:#8b6b43; font-size:1.5rem; font-style:italic; position:relative; z-index:1;">VS</div>
+            <div class="combatant" id="boxEnemy">
                 <div class="intent-box" id="batEnemyIntent">意图: 攻击</div>
                 <div class="avatar" id="batEnemyAv">👹</div>
                 <div class="name" id="batEnemyName">敌人</div>
@@ -197,22 +204,18 @@
                 <div class="buff-zone" id="batEnemyBuff"></div>
             </div>
         </div>
-        
         <div class="log-box" id="batLog"></div>
-        
         <div class="skill-detail" id="skillPanel">
             <h4 id="skName">技能名 <span>真元 -0</span></h4>
             <p id="skDesc">描述</p>
             <div class="cast-actions">
                 <button class="btn-secondary" onclick="battle.cancelSkill()">取消</button>
-                <button class="btn-primary" id="btnCast" onclick="battle.castSkill()">施展</button>
+                <button class="btn-primary" id="btnCast" onclick="battle.castSkill()">施展法术</button>
             </div>
         </div>
-
         <div class="skill-bar" id="batSkills"></div>
     </div>
 
-    <!-- 视图5：升级与抽取 -->
     <div class="view" id="view-upgrade">
         <h1 class="title" style="font-size:1.5rem; margin-top:10px;">境 界 突 破</h1>
         <p class="sub-title">请择一道藏残卷修持</p>
@@ -220,16 +223,24 @@
     </div>
 </div>
 
-<!-- 属性加点面板 -->
 <div class="modal" id="statsModal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>☯️ 灵台内视 · 自由加点</h3>
         <p style="text-align:center; color:#aaa; font-size:0.85rem; margin-bottom:15px;">可用悟性点: <span id="uiStatPts" style="color:#d4af37; font-size:1.2rem; font-weight:bold;">0</span></p>
         <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">体魄</span><span class="stat-desc">每点+20血上限</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('ti',-1)">-</button><span class="s-val" id="uiStatTi">0</span><button class="s-btn" onclick="game.addStat('ti',1)">+</button></div></div>
         <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">炁海</span><span class="stat-desc">每点+15蓝上限</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('qi',-1)">-</button><span class="s-val" id="uiStatQi">0</span><button class="s-btn" onclick="game.addStat('qi',1)">+</button></div></div>
-        <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">神识</span><span class="stat-desc">每点+5%最终伤害</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('shen',-1)">-</button><span class="s-val" id="uiStatShen">0</span><button class="s-btn" onclick="game.addStat('shen',1)">+</button></div></div>
-        <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">根骨</span><span class="stat-desc">每点+3%最终减伤</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('gen',-1)">-</button><span class="s-val" id="uiStatGen">0</span><button class="s-btn" onclick="game.addStat('gen',1)">+</button></div></div>
+        <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">神识</span><span class="stat-desc">每点+10%最终伤害</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('shen',-1)">-</button><span class="s-val" id="uiStatShen">0</span><button class="s-btn" onclick="game.addStat('shen',1)">+</button></div></div>
+        <div class="stat-row-ui"><div style="flex:1;"><span class="stat-name">根骨</span><span class="stat-desc">每点+4%最终减伤</span></div><div class="stat-ctrls"><button class="s-btn" onclick="game.addStat('gen',-1)">-</button><span class="s-val" id="uiStatGen">0</span><button class="s-btn" onclick="game.addStat('gen',1)">+</button></div></div>
         <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="ui.closeModal('statsModal')">确认修行</button>
+    </div>
+</div>
+
+<div class="modal" id="deathModal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="color:#d65c5c; border-bottom:1px dashed #d65c5c;">💀 身死道消</h3>
+        <p style="text-align:center; color:#a89f91; font-size:0.9rem; margin-bottom:20px;" id="deathMsg">你的修仙之途在此断绝...</p>
+        <button class="btn-primary" style="width:100%; margin-bottom:10px; background:linear-gradient(90deg, #2a5a8a, #5a9ab8);" onclick="game.retryBattle()">时光溯回 (重试当前关卡)</button>
+        <button class="btn-secondary" style="width:100%;" onclick="location.reload()">重入轮回 (重新开始游戏)</button>
     </div>
 </div>
 
@@ -270,7 +281,8 @@ const DB = {
     },
     script: [
         { type: 'vn', scene: [{ char: '🧔', name: '传功长老', text: '“这尊百年铁木人桩，你且全力击打，让我看看成色！”' }] },
-        { type: 'battle', enemy: { name: '铁木人桩', hp: 60, acts: ['weak', 'weak'], heavyName: '', heavyDmg: 0, emoji: '🪵', baseDmg: 5, desc: '毫无威胁，请熟悉【法术组合】与【周天恢复】。' } },
+        { type: 'battle', enemy: { name: '铁木人桩', hp: 60, acts: ['weak', 'weak'], heavyName: '', heavyDmg: 0, emoji: '🪵', baseDmg: 5, desc: '毫无威胁，请熟悉【法术组合】与【光效反馈】。' } },
+        { type: 'vn', scene: [{ char: '📜', name: '道藏感悟', text: '“老君曰：大道无形，生育天地... 人能常清静，天地悉皆归。” ——《清静经》', bg: '#1a1c22' }] },
         { type: 'upgrade_stats', pts: 2 },
         { type: 'vn', scene: [
             { char: '🦹', name: '嚣张师兄', text: '“就凭你这新人，也妄图染指筑基丹？给我乖乖躺下！”' },
@@ -332,6 +344,14 @@ const ui = {
         let p = document.createElement('p'); p.innerHTML = msg; if(cls) p.className=cls;
         let box = document.getElementById('batLog'); box.appendChild(p); box.scrollTop = box.scrollHeight;
     },
+    playFx: (targetBoxId, fxClass, duration = 500) => {
+        let target = document.getElementById(targetBoxId);
+        if(!target) return;
+        let fx = document.createElement('div');
+        fx.className = fxClass;
+        target.appendChild(fx);
+        setTimeout(() => fx.remove(), duration);
+    },
     updateStatsModal: () => {
         document.getElementById('uiStatPts').textContent = state.stats.unspent;
         ['ti','qi','shen','gen'].forEach(k => document.getElementById('uiStat'+k.charAt(0).toUpperCase()+k.slice(1)).textContent = state.stats[k]);
@@ -358,8 +378,12 @@ const game = {
     },
     calcStats: () => {
         let opHp = state.player.maxHp, opQi = state.player.maxQi;
-        state.player.maxHp = 150 + (state.stats.ti * 20); 
-        state.player.maxQi = 80 + (state.stats.qi * 15);
+        // 【核心修复】：加上了境界（realmIdx）乘以成长值的基数
+        let baseHp = 150 + (state.realmIdx * 50); 
+        let baseQi = 80 + (state.realmIdx * 20); 
+        
+        state.player.maxHp = baseHp + (state.stats.ti * 20); 
+        state.player.maxQi = baseQi + (state.stats.qi * 15);
         if(state.player.maxHp > opHp) state.player.hp += (state.player.maxHp - opHp);
         if(state.player.maxQi > opQi) state.player.qi += (state.player.maxQi - opQi);
     },
@@ -415,6 +439,7 @@ const game = {
             document.getElementById('uiRealm').textContent = DB.realms[state.realmIdx];
             document.getElementById('btnStats').classList.add('pulse');
             
+            game.calcStats(); // 【关键修复】：触发升级后立即重算最大血量
             state.player.hp = state.player.maxHp;
             state.player.qi = state.player.maxQi;
             ui.log('【天道提示】境界突破，气血与真元已完全回满！', 'log-sys');
@@ -435,6 +460,29 @@ const game = {
             });
         }
         else if(node.type === 'end') { alert("首章测试完毕！后续内容敬请期待。"); location.reload(); }
+    },
+    
+    // 【关键新增】：统一的死亡处理逻辑
+    handleDeath: (msg) => {
+        document.getElementById('batEnemyIntent').style.display='none';
+        ui.log(`💀 ${msg || '眼前一黑，你倒下了...'}`, 'log-dmg');
+        document.getElementById('deathMsg').textContent = msg || '你的修仙之途在此断绝...';
+        document.getElementById('deathModal').style.display = 'flex';
+    },
+    retryBattle: () => {
+        document.getElementById('deathModal').style.display = 'none';
+        state.player.hp = state.player.maxHp;
+        state.player.qi = state.player.maxQi;
+        state.player.buffs = {};
+        state.player.cds = {};
+        let node = DB.script[state.nodeIdx];
+        if(node.type === 'battle') {
+            battle.init(node.enemy);
+        } else if (node.type === 'vn') {
+            vn.start(node.scene);
+        } else {
+            location.reload();
+        }
     }
 };
 
@@ -466,11 +514,17 @@ const vn = {
                         e.stopPropagation();
                         if(c.correct) {
                             ui.log('【顿悟】道心通明！', 'log-buff');
+                            ui.playFx('vnBox', 'fx-shield', 800);
                             state.vnStep++; vn.render();
                         } else {
                             ui.float('vnChar', '遭天道反噬', 'log-dmg');
-                            state.player.hp = Math.max(1, state.player.hp - 30); game.updateUI();
-                            el.innerHTML = `<span style="color:#d65c5c">“执迷不悟！再给你一次机会！”</span><br><br>` + line.text;
+                            ui.playFx('vnBox', 'fx-lightning', 500);
+                            state.player.hp = 0; game.updateUI();
+                            document.getElementById('vnBox').onclick = null;
+                            document.getElementById('vnChoices').style.display = 'none';
+                            
+                            // 【关键修复】：调用正确的死亡处理逻辑
+                            setTimeout(() => game.handleDeath('回答错误，道心崩坏，心魔吞噬了你！'), 1000);
                         }
                     };
                     cDiv.appendChild(btn);
@@ -503,7 +557,7 @@ const battle = {
         let sBox = document.getElementById('batSkills'); sBox.innerHTML = '';
         state.player.skills.forEach(k => {
             let btn = document.createElement('button'); 
-            btn.className = 'skill-btn'; // FIX: Ensure class is applied immediately
+            btn.className = 'skill-btn'; 
             btn.dataset.key = k;
             btn.onclick = () => battle.selectSkill(k); sBox.appendChild(btn);
         });
@@ -539,7 +593,7 @@ const battle = {
         ui.log(`施展 【${s.name}】。`);
 
         let dmg = s.dmg || 0;
-        if(dmg > 0) dmg = Math.floor(dmg * (1 + state.stats.shen * 0.05)); 
+        if(dmg > 0) dmg = Math.floor(dmg * (1 + state.stats.shen * 0.10)); // 神识加成 10%
         if(state.player.sectPass === 'shenxiao' && s.tags?.includes('lei')) { dmg = Math.floor(dmg * 1.15); ui.log('【神霄】雷法增伤！'); }
         if(state.player.sectPass === 'longmen') dmg = Math.floor(dmg * (1 + (state.player.hp/state.player.maxHp)*0.2));
         if(state.player.sectPass === 'nanzong' && s.cost > 0) { let h = Math.floor(s.cost * 0.5); state.player.hp = Math.min(state.player.maxHp, state.player.hp+h); }
@@ -551,13 +605,23 @@ const battle = {
         if(s.debuff) { state.enemy.buffs[s.debuff] = (state.enemy.buffs[s.debuff]||0) + s.stacks; ui.float('batEnemyAv', '-状态', 'log-sys'); }
         if(s.heal) { state.player.hp = Math.min(state.player.maxHp, state.player.hp + s.heal); ui.float('batPlayerAv', `+${s.heal}`, 'log-heal'); }
 
+        if(s.tags?.includes('lei')) ui.playFx('boxEnemy', 'fx-lightning', 500); 
+        else if(s.tags?.includes('huo') || k === 'sanmei') ui.playFx('boxEnemy', 'fx-fire', 600); 
+        else if(s.type === 'attack') ui.playFx('boxEnemy', 'fx-slash', 400); 
+        if(s.type === 'defend' || s.buff === 'jinguang') ui.playFx('boxPlayer', 'fx-shield', 700); 
+        if(s.heal || s.buff === 'shengji') ui.playFx('boxPlayer', 'fx-heal', 900); 
+
         if(k === 'tianpeng' && state.player.buffs['jinguang']>0) { state.player.buffs['jinguang']--; dmg *= 2; ui.log('💥 金光化雷，威力翻倍！', 'log-dmg'); }
         if(k === 'yushu' && state.enemy.buffs['leiyin']>0) { 
             let st = state.enemy.buffs['leiyin']; state.enemy.buffs['leiyin'] = 0; 
             dmg = Math.floor(dmg * (1 + 0.5 * st)); 
             ui.log(`⚡ 引爆${st}层[雷印]，玉枢神雷狂暴摧毁！`, 'log-dmg'); 
+            ui.playFx('boxEnemy', 'fx-lightning', 600); 
         }
-        if(k === 'sanmei' && state.player.buffs['shengji']>0) { let st = state.player.buffs['shengji']; state.player.buffs['shengji'] = 0; dmg += st * 25; ui.log(`💥 引爆${st}层[生机]，烈火燎原！`, 'log-dmg'); }
+        if(k === 'sanmei' && state.player.buffs['shengji']>0) { 
+            let st = state.player.buffs['shengji']; state.player.buffs['shengji'] = 0; dmg += st * 25; ui.log(`💥 引爆${st}层[生机]，烈火燎原！`, 'log-dmg'); 
+            ui.playFx('boxEnemy', 'fx-fire', 800); 
+        }
         if(k === 'yuanshen' && state.player.hp >= state.player.maxHp * 0.9) { dmg *= 2; ui.log('✨ 气血充盈，剑意通神！', 'log-buff'); }
 
         if(dmg > 0) {
@@ -587,12 +651,14 @@ const battle = {
             let shHeal = 5; state.player.hp = Math.min(state.player.maxHp, state.player.hp + shHeal);
             state.player.buffs['shengji']--;
             ui.log(`🌿 [生机]流转，恢复 ${shHeal} 气血。`, 'log-heal'); ui.float('batPlayerAv', `+${shHeal}`, 'log-heal');
+            ui.playFx('boxPlayer', 'fx-heal', 500);
         }
 
         if(state.player.buffs['liujia'] > 0) {
             state.player.buffs['liujia']--; 
             let ljDmg = state.player.sectPass === 'maoshan' ? 25 : 15; 
             state.enemy.hp -= ljDmg;
+            ui.playFx('boxEnemy', 'fx-slash', 300);
             ui.log(`🛡️ 六甲神将斩邪 ${ljDmg} 点。`); ui.float('batEnemyAv', `-${ljDmg}`, 'log-dmg');
             if(state.enemy.hp <= 0) { 
                 ui.log('战斗胜利！调息片刻，状态回满。', 'log-sys');
@@ -603,6 +669,7 @@ const battle = {
 
         if(state.enemy.buffs['leiyin'] > 0) {
             let lDmg = 8; state.enemy.hp -= lDmg; state.enemy.buffs['leiyin']--;
+            ui.playFx('boxEnemy', 'fx-lightning', 300);
             ui.log(`⚡ [雷印]触发，受 ${lDmg} 雷击。`, 'log-dmg'); ui.float('batEnemyAv', `-${lDmg}`, 'log-dmg');
             if(state.enemy.hp <= 0) { 
                 ui.log('战斗胜利！调息片刻，状态回满。', 'log-sys');
@@ -621,10 +688,11 @@ const battle = {
             else if(state.player.buffs['huajie'] > 0) {
                 state.player.buffs['huajie']--; let h = 25; state.player.hp = Math.min(state.player.maxHp, state.player.hp+h);
                 ui.log('☯️ 坎离交媾，化解致命一击并回血。', 'log-heal'); ui.float('batPlayerAv', `+${h}化解`, 'log-heal');
+                ui.playFx('boxPlayer', 'fx-heal', 500);
             }
             else {
                 if(state.enemy.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.enemy.buffs['chihuan']--; } 
-                eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.03)); 
+                eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.04)); // 根骨减伤提升到 4%
                 
                 if(state.player.passive === 'crisis' && state.player.hp < state.player.maxHp*0.3) {
                     eDmg = Math.floor(eDmg * 0.5); ui.log('【危机直觉】触发，伤害减半！', 'log-buff');
@@ -637,6 +705,7 @@ const battle = {
                 
                 state.player.hp = Math.max(0, state.player.hp - eDmg);
                 ui.log(`敌人攻击，对你造成 <span class="log-dmg">${eDmg}</span> 伤害。`);
+                ui.playFx('boxPlayer', 'fx-slash', 300); 
                 ui.float('batPlayerAv', `-${eDmg}`, 'log-dmg');
                 document.getElementById('batPlayerAv').classList.add('shake-fx');
                 setTimeout(()=>document.getElementById('batPlayerAv').classList.remove('shake-fx'), 300);
@@ -656,15 +725,7 @@ const battle = {
         state.enemy.turn++; battle.updateIntent(); game.updateUI();
 
         if(state.player.hp <= 0) {
-            document.getElementById('batEnemyIntent').style.display='none';
-            ui.log('💀 眼前一黑，你倒下了...', 'log-dmg');
-            ui.log('【天道提示】真灵未散，时光溯回至战前！', 'log-sys');
-            setTimeout(() => {
-                state.player.hp = state.player.maxHp;
-                state.player.qi = state.player.maxQi;
-                state.player.buffs = {};
-                battle.init(DB.script[state.nodeIdx].enemy);
-            }, 3000);
+            game.handleDeath('气血耗尽，身死道消...');
         } else {
             document.querySelectorAll('.skill-btn').forEach(b=>b.disabled=(state.player.qi < DB.skills[b.dataset.key].cost));
         }
