@@ -8,223 +8,304 @@
         * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
         body { background: #120e0a; color: #d6c6ad; font-family: 'Noto Serif SC', 'KaiTi', serif; display: flex; justify-content: center; min-height: 100vh; overflow: hidden; }
         
-        /* 布局容器 */
         #game-app { width: 100%; max-width: 600px; height: 100vh; display: flex; flex-direction: column; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.02"><path d="M50 0L100 50L50 100L0 50Z" fill="%23fff"/></svg>'); position: relative; }
         
         /* 顶部状态栏 */
         .top-bar { padding: 12px 16px; background: linear-gradient(180deg, #1f1812, #120e0a); border-bottom: 2px solid #8b6b43; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.6); }
-        .realm-badge { background: #8b6b43; color: #120e0a; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; }
-        .status-area { flex: 1; margin-left: 12px; }
-        .bar { height: 12px; background: #2a2018; border-radius: 6px; margin: 5px 0; overflow: hidden; border: 1px solid #4a3826; position: relative; }
-        .bar-hp { background: linear-gradient(90deg, #6b2020, #a03030); transition: width 0.3s; }
-        .bar-qi { background: linear-gradient(90deg, #204b6b, #306ea0); transition: width 0.3s; }
-        .bar-text { position: absolute; width: 100%; text-align: center; top: -1px; font-size: 0.7rem; color: #eed; text-shadow: 1px 1px 1px #000; }
+        .realm-badge { background: #8b6b43; color: #120e0a; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; cursor: pointer; }
+        .status-area { flex: 1; margin: 0 12px; display: flex; flex-direction: column; gap: 6px; }
+        .stat-row { display: flex; flex-direction: column; }
+        .stat-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: #e6c888; margin-bottom: 3px; }
+        .bar-container { height: 8px; background: #2a2018; border-radius: 4px; overflow: hidden; border: 1px solid #4a3826; }
+        .bar-hp { height: 100%; background: linear-gradient(90deg, #6b2020, #d65c5c); transition: width 0.3s; }
+        .bar-qi { height: 100%; background: linear-gradient(90deg, #204b6b, #5a9ab8); transition: width 0.3s; }
+        .top-btns { display: flex; gap: 8px; }
+        .icon-btn { background: #3a2b1f; color: #d4af37; border: 1px solid #8b6b43; border-radius: 50%; width: 28px; height: 28px; font-weight: bold; cursor: pointer; text-align: center; line-height: 26px; font-size: 0.85rem; }
+        .icon-btn.pulse { animation: pulseGlow 1.5s infinite; }
         
-        /* 视图切换区 */
         .view { flex: 1; display: none; flex-direction: column; padding: 16px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4a3826 #120e0a; }
         .view.active { display: flex; }
         
-        /* 选门派视图 */
-        .sect-title { text-align: center; color: #d4af37; font-size: 1.6rem; margin: 20px 0; letter-spacing: 4px; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-        .faction-group { margin-bottom: 24px; border-left: 3px solid #6b8e23; padding-left: 12px; }
-        .faction-title { font-size: 1.1rem; color: #9acd32; margin-bottom: 10px; font-weight: bold; }
-        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: #1c1510; border: 1px solid #4a3826; border-radius: 8px; padding: 14px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        /* 门派选择 */
+        .sect-title { text-align: center; color: #d4af37; font-size: 1.6rem; margin: 10px 0 20px; letter-spacing: 4px; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .card { background: #1c1510; border: 1px solid #4a3826; border-radius: 8px; padding: 14px; cursor: pointer; transition: 0.2s; }
         .card:hover { border-color: #8b6b43; background: #261d15; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,107,67,0.2); }
         .card h3 { font-size: 1.05rem; margin-bottom: 6px; color: #e6c888; }
         .card p { font-size: 0.75rem; color: #a89f91; line-height: 1.4; }
         
-        /* 剧情/事件视图 */
+        /* 剧情与奇遇 */
         .story-img { height: 140px; background: radial-gradient(circle, #2a2018, #120e0a); border: 1px solid #4a3826; border-radius: 8px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; box-shadow: inset 0 0 30px #000; }
-        .story-text { font-size: 1.05rem; line-height: 1.7; color: #c4b59d; margin-bottom: 24px; text-shadow: 1px 1px 2px #000; flex: 1; }
+        .story-text { font-size: 1.05rem; line-height: 1.7; color: #c4b59d; margin-bottom: 24px; }
         .choice-btn { background: linear-gradient(90deg, #1f1812, #120e0a); border: 1px solid #634b30; color: #d6c6ad; padding: 14px; border-radius: 8px; margin-bottom: 12px; cursor: pointer; font-size: 0.95rem; text-align: left; transition: 0.2s; }
-        .choice-btn:hover { background: linear-gradient(90deg, #2a2018, #1c1510); border-color: #8b6b43; padding-left: 20px; color: #f0e6d2; }
+        .choice-btn:hover { border-color: #8b6b43; padding-left: 20px; color: #f0e6d2; }
 
-        /* 战斗视图 */
-        .battle-stage { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #4a3826; margin-bottom: 12px; }
+        /* 战斗系统 */
+        .battle-stage { display: flex; justify-content: space-between; align-items: flex-end; padding: 10px 0; border-bottom: 1px dashed #4a3826; margin-bottom: 12px; }
         .combatant { text-align: center; width: 45%; position: relative; }
         .combatant .avatar { font-size: 3.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.05)); transition: 0.3s; }
-        .combatant .name { font-size: 0.95rem; margin-top: 10px; font-weight: bold; color: #e6c888; }
-        .combatant .enemy-hp-bar { height: 8px; background: #2a2018; border-radius: 4px; margin-top: 6px; overflow: hidden; border: 1px solid #4a3826; }
-        .combatant .enemy-hp-fill { height: 100%; background: #a03030; width: 100%; transition: 0.3s; }
+        
+        /* 敌方意图框 (核心博弈机制) */
+        .intent-box { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #d65c5c; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; color: #ff8888; white-space: nowrap; display: none; z-index: 5; box-shadow: 0 0 10px rgba(214,92,92,0.5); }
+        .intent-box.intent-charge { border-color: #d4af37; color: #d4af37; box-shadow: 0 0 15px rgba(212,175,55,0.5); font-weight: bold; animation: shake 1s infinite; }
+        
         .buff-zone { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 8px; min-height: 22px; }
         .buff-tag { font-size: 0.7rem; background: #35281c; border: 1px solid #735532; color: #e6c888; padding: 2px 6px; border-radius: 4px; }
         
         .log-box { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #3a2b1f; border-radius: 8px; padding: 12px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; color: #b8ac9a; margin-bottom: 12px; }
         .log-box p { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; }
-        .log-dmg { color: #d65c5c; } .log-heal { color: #6bba6b; } .log-buff { color: #d4af37; font-weight: bold; }
+        .log-dmg { color: #d65c5c; font-weight:bold; } .log-heal { color: #6bba6b; font-weight:bold; } .log-buff { color: #d4af37; } .log-dao { color: #5a9ab8; font-style: italic; }
         
+        /* 技能栏与确认面板 */
+        .skill-detail-panel { background: #1f1812; border: 1px solid #8b6b43; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+        .skill-detail-panel h4 { color: #d4af37; margin-bottom: 6px; font-size: 1.05rem; display: flex; justify-content: space-between; }
+        .skill-detail-panel p { font-size: 0.8rem; color: #c4b59d; line-height: 1.5; margin-bottom: 8px; }
+        .skill-quote { font-size: 0.75rem; color: #735532; font-style: italic; margin-bottom: 12px; border-left: 2px solid #4a3826; padding-left: 6px; }
+        .cast-actions { display: flex; gap: 10px; }
+        .btn-cast { flex: 2; background: linear-gradient(90deg, #8b6b43, #634b30); color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 0.9rem;}
+        .btn-cancel { flex: 1; background: #2a2018; color: #a89f91; border: 1px solid #4a3826; padding: 10px; border-radius: 6px; cursor: pointer; font-family: inherit; }
+
         .skill-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-bottom: 10px; }
-        .skill-btn { background: #1c1510; border: 1px solid #5a4530; color: #d6c6ad; padding: 10px 4px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; text-align: center; position: relative; transition: 0.2s; font-family: inherit; }
-        .skill-btn:hover:not(:disabled) { border-color: #8b6b43; background: #2a2018; }
+        .skill-btn { background: #1c1510; border: 1px solid #5a4530; color: #d6c6ad; padding: 10px 4px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; text-align: center; transition: 0.2s; font-family: inherit; }
+        .skill-btn.selected { border-color: #d4af37; background: #2a2018; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(212,175,55,0.2); }
         .skill-btn:disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
-        .skill-btn .cost { font-size: 0.65rem; color: #5a9ab8; display: block; margin-top: 4px; }
-        .skill-btn.combo-ready { border-color: #d65c5c; box-shadow: 0 0 10px rgba(214,92,92,0.4); background: #2c1a1a; } 
 
-        /* 肉鸽升级视图 */
-        .upgrade-cards { display: flex; flex-direction: column; gap: 14px; }
-        .upgrade-card { background: linear-gradient(135deg, #261d15, #120e0a); border: 1px solid #735532; border-radius: 8px; padding: 18px; cursor: pointer; transition: 0.2s; }
-        .upgrade-card:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(212,175,55,0.2); border-color: #d4af37; }
-        .upgrade-card h3 { color: #e6c888; font-size: 1.15rem; margin-bottom: 8px; display: flex; justify-content: space-between;}
-        .upgrade-card p { font-size: 0.85rem; color: #b8ac9a; line-height: 1.5; }
-        .upgrade-card .tag { font-size: 0.7rem; background: #3a1a1a; padding: 2px 8px; border-radius: 4px; color: #d65c5c; border: 1px solid #5c2a2a; }
+        /* 自由加点模态框 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; backdrop-filter: blur(5px); }
+        .modal-content { background: #1c1510; border: 2px solid #8b6b43; border-radius: 8px; padding: 20px; max-width: 400px; width: 100%; color: #d6c6ad; }
+        .modal-content h3 { color: #d4af37; margin-bottom: 16px; text-align: center; border-bottom: 1px solid #4a3826; padding-bottom: 10px; }
+        .stat-dist-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #2a2018; padding: 8px 12px; border-radius: 6px; }
+        .stat-dist-info { flex: 1; }
+        .stat-name { font-weight: bold; color: #e6c888; display: block; font-size: 0.95rem; }
+        .stat-desc { font-size: 0.7rem; color: #a89f91; }
+        .stat-controls { display: flex; align-items: center; gap: 10px; }
+        .stat-btn { background: #3a2b1f; border: 1px solid #735532; color: #d4af37; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .stat-btn:active { background: #1c1510; }
+        .stat-val { font-size: 1.1rem; width: 20px; text-align: center; font-weight: bold; }
+        
+        /* 奇遇心法栏 */
+        .passive-zone { display: flex; gap: 8px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; }
+        .passive-book { background: #2c1a1a; border: 1px solid #d65c5c; color: #ff8888; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
 
-        /* 特效动画 */
-        @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-5px);} 40%,80%{transform:translateX(5px);} }
-        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-3px);} 40%,80%{transform:translateX(3px);} }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.7); } 70% { box-shadow: 0 0 0 8px rgba(212,175,55,0); } 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); } }
+        .shake-fx { animation: shake 0.4s; }
         .floating-text { position: absolute; font-weight: bold; font-size: 1.3rem; text-shadow: 1px 1px 2px #000; z-index: 100; animation: floatUp 1.2s forwards; pointer-events: none; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-45px) scale(1.3); } }
     </style>
 </head>
 <body>
 <div id="game-app">
-    <!-- 顶部状态 -->
+    <!-- 顶部状态栏 -->
     <div class="top-bar" id="topBar" style="display: none;">
-        <div class="realm-badge" id="realmBadge">百日筑基</div>
+        <div class="realm-badge" id="realmBadge" onclick="openStatsModal()">灵台加点</div>
         <div class="status-area">
-            <div class="bar"><div class="bar-hp" id="barHp" style="width:100%"></div><div class="bar-text">本命气血 <span id="valHp">100</span>/<span id="valMaxHp">100</span></div></div>
-            <div class="bar"><div class="bar-qi" id="barQi" style="width:100%"></div><div class="bar-text">先天真元 <span id="valQi">50</span>/<span id="valMaxQi">50</span></div></div>
+            <div class="stat-row"><div class="stat-label"><span>气血 (体魄)</span> <span id="valHpText">100/100</span></div><div class="bar-container"><div class="bar-hp" id="barHp"></div></div></div>
+            <div class="stat-row"><div class="stat-label"><span>真元 (炁海)</span> <span id="valQiText">50/50</span></div><div class="bar-container"><div class="bar-qi" id="barQi"></div></div></div>
+        </div>
+        <div class="top-btns">
+            <div class="icon-btn" id="btnStats" onclick="openStatsModal()">修</div>
+            <div class="icon-btn" onclick="document.getElementById('helpModal').style.display='flex'">?</div>
         </div>
     </div>
 
-    <!-- 1. 选择门派 -->
+    <!-- 1. 门派选择 -->
     <div class="view active" id="view-sect">
         <h1 class="sect-title">三千道藏：太虚劫</h1>
-        <p style="text-align:center; color:#8b6b43; font-size:0.9rem; margin-bottom:24px;">“大道无形，生育天地；大道无情，运行日月。”</p>
-        
-        <div class="faction-group">
-            <div class="faction-title">【正一法脉】 (修三山符箓与雷霆法)</div>
-            <div class="card-grid">
-                <div class="card" onclick="selectSect('longhu')"><h3>龙虎宗</h3><p>尊张天师，修《正一经》。以八大神咒护体，辅以降魔神雷，四平八稳。</p></div>
-                <div class="card" onclick="selectSect('shenxiao')"><h3>神霄派</h3><p>尊紫虚元君，修《神霄雷书》。专引九天玄雷，主极道毁灭与破邪。</p></div>
-            </div>
-        </div>
-        <div class="faction-group">
-            <div class="faction-title">【全真道统】 (修性命双修与内丹)</div>
-            <div class="card-grid">
-                <div class="card" onclick="selectSect('nanzong')"><h3>紫阳南宗</h3><p>尊张伯端，修《悟真篇》。精于坎离交媾，调和五行生克，转化阴阳。</p></div>
-                <div class="card" onclick="selectSect('longmen')"><h3>龙门派</h3><p>尊丘处机，修《大丹直指》。清净无为，真气绵长，以元神御化出剑气。</p></div>
-            </div>
-        </div>
-        <div class="faction-group">
-            <div class="faction-title">【上清大洞】 (修存思与步罡踏斗)</div>
-            <div class="card-grid">
-                <div class="card" onclick="selectSect('maoshan')"><h3>上清茅山</h3><p>修《黄庭经》。擅长召请六丁六甲护法，遁甲藏形，借天地万物之力。</p></div>
-                <div class="card" onclick="selectSect('qingwei')"><h3>清微派</h3><p>修《清微丹诀》。内炼真阳，外施符水，涤荡秽气，专克阴邪祟物。</p></div>
-            </div>
+        <p style="text-align:center; color:#8b6b43; font-size:0.9rem; margin-bottom:20px;">“夫兵形象水，水之形，避高而趋下... 避其锐气，击其惰归。”</p>
+        <div class="card-grid" style="grid-template-columns: 1fr;">
+            <div class="card" onclick="selectSect('longhu')"><h3>⛩️ 正一龙虎 (雷法与金光)</h3><p>刚柔并济。拥有【金光神咒】绝对防御，辅以【天蓬神咒】打出穿透。</p></div>
+            <div class="card" onclick="selectSect('longmen')"><h3>☯️ 全真龙门 (内丹与剑气)</h3><p>性命双修。擅用【坎离交媾】化解敌方致命一击，并伺机斩出【元神剑气】。</p></div>
+            <div class="card" onclick="selectSect('maoshan')"><h3>📜 上清茅山 (奇门与请神)</h3><p>借法天地。利用【奇门遁形】规避伤害，召唤【六甲神将】代为攻伐。</p></div>
         </div>
     </div>
 
-    <!-- 2. 剧情事件 -->
+    <!-- 2. 剧情/奇遇事件 -->
     <div class="view" id="view-story">
         <div class="story-img" id="storyImg">⛩️</div>
         <div class="story-text" id="storyText"></div>
         <div id="storyChoices"></div>
     </div>
 
-    <!-- 3. 战斗界面 -->
+    <!-- 3. 战斗系统 -->
     <div class="view" id="view-battle">
+        <!-- 奇遇心法展示区 -->
+        <div class="passive-zone" id="passiveZone"></div>
+
         <div class="battle-stage">
             <div class="combatant" id="boxPlayer">
                 <div class="avatar" id="avatarPlayer">🧘‍♂️</div>
-                <div class="name">羽客 (修道者)</div>
+                <div class="name">羽客 (你)</div>
                 <div class="buff-zone" id="buffPlayer"></div>
             </div>
             <div style="font-weight:bold; color:#735532; font-size:1.6rem; font-family:'KaiTi';">伐</div>
             <div class="combatant" id="boxEnemy">
+                <div class="intent-box" id="enemyIntent">蓄力中...</div>
                 <div class="avatar" id="avatarEnemy">🧟</div>
-                <div class="name" id="nameEnemy">浊气怨尸</div>
-                <div class="enemy-hp-bar"><div class="enemy-hp-fill" id="barEnemyHp"></div></div>
-                <div style="font-size:0.7rem; color:#8b6b43; margin-top:4px;">气血残余: <span id="valEnemyHp">0</span></div>
+                <div class="name" id="nameEnemy">怨尸</div>
+                <div class="stat-row" style="text-align:left; margin-top:8px;">
+                    <div class="stat-label"><span>血量</span> <span id="valEnemyHpText">0/0</span></div>
+                    <div class="bar-container"><div class="bar-hp" id="barEnemyHp" style="width:100%"></div></div>
+                </div>
                 <div class="buff-zone" id="buffEnemy"></div>
             </div>
         </div>
         
         <div class="log-box" id="battleLog"></div>
         
+        <!-- 技能详情与博弈提示 -->
+        <div class="skill-detail-panel" id="skillDetailPanel">
+            <h4 id="detailName">技能名 <span style="color:#5a9ab8; font-size:0.85rem;">真元 -0</span></h4>
+            <div class="skill-quote" id="detailQuote">“道可道，非常道”</div>
+            <p id="detailDesc">技能描述...</p>
+            <div class="cast-actions">
+                <button class="btn-cancel" onclick="cancelSkill()">散去真气</button>
+                <button class="btn-cast" id="btnCast" onclick="executeSkill()">结印施展</button>
+            </div>
+        </div>
+
         <div class="skill-bar" id="skillContainer"></div>
     </div>
 
-    <!-- 4. 肉鸽升级/奖励 -->
+    <!-- 4. 肉鸽技能抽取 -->
     <div class="view" id="view-upgrade">
-        <h2 style="color:#d4af37; text-align:center; margin-bottom:12px; letter-spacing: 2px;">境界突破 · 紫府开悟</h2>
-        <p style="text-align:center; font-size:0.85rem; color:#b8ac9a; margin-bottom:24px;">阴阳交泰，灵台澄明。你感悟了《道藏》中的一页残卷，请择一法修持：</p>
-        <div class="upgrade-cards" id="upgradeCards"></div>
+        <h2 style="color:#d4af37; text-align:center; margin-bottom:12px; letter-spacing: 2px;">道藏残卷</h2>
+        <p style="text-align:center; font-size:0.85rem; color:#b8ac9a; margin-bottom:24px;">击退强敌，请择一门新法术修持：</p>
+        <div class="upgrade-cards" id="upgradeCards" style="flex-direction:column; display:flex; gap:12px;"></div>
+    </div>
+</div>
+
+<!-- 自由加点模态框 -->
+<div class="modal-overlay" id="statsModal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>☯️ 灵台内视 · 性命双修</h3>
+        <p style="text-align:center; color:#a89f91; font-size:0.85rem; margin-bottom:16px;">
+            可用悟性点：<span id="statPoints" style="color:#d4af37; font-size:1.2rem; font-weight:bold;">0</span>
+        </p>
+        
+        <div class="stat-dist-row">
+            <div class="stat-dist-info"><span class="stat-name">体魄</span><span class="stat-desc">每点 +10气血上限</span></div>
+            <div class="stat-controls">
+                <button class="stat-btn" onclick="addStat('ti', -1)">-</button>
+                <span class="stat-val" id="valStatTi">0</span>
+                <button class="stat-btn" onclick="addStat('ti', 1)">+</button>
+            </div>
+        </div>
+        <div class="stat-dist-row">
+            <div class="stat-dist-info"><span class="stat-name">炁海</span><span class="stat-desc">每点 +5真元上限</span></div>
+            <div class="stat-controls">
+                <button class="stat-btn" onclick="addStat('qi', -1)">-</button>
+                <span class="stat-val" id="valStatQi">0</span>
+                <button class="stat-btn" onclick="addStat('qi', 1)">+</button>
+            </div>
+        </div>
+        <div class="stat-dist-row">
+            <div class="stat-dist-info"><span class="stat-name">神识</span><span class="stat-desc">每点 +5% 法术最终伤害</span></div>
+            <div class="stat-controls">
+                <button class="stat-btn" onclick="addStat('shen', -1)">-</button>
+                <span class="stat-val" id="valStatShen">0</span>
+                <button class="stat-btn" onclick="addStat('shen', 1)">+</button>
+            </div>
+        </div>
+        <div class="stat-dist-row">
+            <div class="stat-dist-info"><span class="stat-name">根骨</span><span class="stat-desc">每点 +2% 最终伤害减免</span></div>
+            <div class="stat-controls">
+                <button class="stat-btn" onclick="addStat('gen', -1)">-</button>
+                <span class="stat-val" id="valStatGen">0</span>
+                <button class="stat-btn" onclick="addStat('gen', 1)">+</button>
+            </div>
+        </div>
+        <button class="choice-btn" style="width:100%; text-align:center; margin-top:10px;" onclick="closeStatsModal()">确认修行</button>
+    </div>
+</div>
+
+<!-- 规则说明模态框 -->
+<div class="modal-overlay" id="helpModal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>📖 道藏总纲 · 博弈指北</h3>
+        <ul style="color:#b8ac9a; padding-left:20px; font-size:0.85rem; line-height:1.6;">
+            <li style="margin-bottom:8px;"><strong style="color:#d65c5c;">敌方意图：</strong>注意敌人头顶的提示！如果敌人正在【蓄力】，下一回合必定释放毁灭打击，此时硬刚必死。</li>
+            <li style="margin-bottom:8px;"><strong style="color:#6bba6b;">防守反击：</strong>道家讲究“避其锐气”。当敌人蓄力时，使用【坎离交媾】化解，或【奇门遁形】隐匿，不仅能规避天量伤害，还能触发心法的巨额回血回蓝。</li>
+            <li style="margin-bottom:8px;"><strong style="color:#d4af37;">自由加点：</strong>点击顶部“灵台加点”分配属性。打不过BOSS时，试着全点【根骨】硬抗，或全点【神识】秒杀。</li>
+        </ul>
+        <button class="choice-btn" style="width:100%; text-align:center;" onclick="document.getElementById('helpModal').style.display='none'">贫道悟了</button>
     </div>
 </div>
 
 <script>
-/**
- * 核心游戏数据与引擎：三千道藏体系
- */
+// --- 核心数据配置 ---
 const DATA = {
-    realms: ['百日筑基', '十月怀胎', '三年乳哺', '九年面壁', '阳神出窍', '羽化登仙'],
+    realms: ['筑基', '结丹', '元婴', '化神', '渡劫'],
     sects: {
-        longhu: { name: '正一龙虎', hp: 130, qi: 60, skills: ['dao_punch', 'jinguang_zhou', 'tianpeng_zhou'] },
-        shenxiao: { name: '正一神霄', hp: 90, qi: 85, skills: ['dao_punch', 'zhaolei_fu', 'yushu_lei'] },
-        nanzong: { name: '紫阳南宗', hp: 110, qi: 75, skills: ['dao_punch', 'kanli_jiao', 'sanmei_huo'] },
-        longmen: { name: '全真龙门', hp: 160, qi: 50, skills: ['dao_punch', 'shouyi_jue', 'yuanshen_jian'] },
-        maoshan: { name: '上清茅山', hp: 100, qi: 80, skills: ['dao_punch', 'liujia_fu', 'dunjia_yin'] },
-        qingwei: { name: '清微派', hp: 120, qi: 70, skills: ['dao_punch', 'sajing_shui', 'jiamu_qi'] }
+        longhu: { name: '正一龙虎', skills: ['dao_punch', 'jinguang_zhou', 'tianpeng_zhou'] },
+        longmen: { name: '全真龙门', skills: ['dao_punch', 'shouyi_jue', 'kanli_jiao', 'yuanshen_jian'] },
+        maoshan: { name: '上清茅山', skills: ['dao_punch', 'dunjia_yin', 'liujia_fu'] }
     },
-    // 道教古典功法卡池
+    // 被动心法（奇遇获得）
+    passives: {
+        'qingjing': { name: '《清静经》', desc: '若本回合使用了防御/辅助(无伤害)技能，额外恢复10%气血。' },
+        'zuowang': { name: '《坐忘论》', desc: '受到敌人伤害时，恢复10点真元。' },
+        'leizhai': { name: '《雷斋戒》', desc: '雷系及剑气伤害附带 20% 吸血效果。' }
+    },
     skillPool: {
-        dao_punch: { name: '吐纳/罡步', cost: 0, desc: '基础术法与步法，运转周天恢复5点真元。', type: 'attack', baseDmg: 8 },
-        // 防御与恢复
-        jinguang_zhou: { name: '金光神咒', cost: 15, desc: '【护体】体有金光，覆映吾身。获得2层[金光]护盾(抵挡10伤/层)。', type: 'buff', addBuff: 'jinguang', stacks: 2 },
-        shouyi_jue: { name: '抱元守一', cost: 10, desc: '【内丹】致虚极，守静笃。消耗真元，恢复30点气血。', type: 'heal', heal: 30 },
-        sajing_shui: { name: '甘露净水', cost: 15, desc: '【净化】以杨柳洒天仙玉露。涤荡自身所有负面状态，恢复15血。', type: 'cleanse', heal: 15 },
-        kanli_jiao: { name: '坎离交媾', cost: 20, desc: '【阴阳】取坎填离。化解下一次敌方攻击(获得[化解]状态)，并反哺气血。', type: 'buff', addBuff: 'huajie', stacks: 1 },
-        dunjia_yin: { name: '奇门遁形', cost: 20, desc: '【奇门】踏罡步斗，匿迹销声。获得[隐匿]1回合(免疫伤害)。', type: 'buff', addBuff: 'yinni', stacks: 1 },
-        // 五行铺垫与增益
-        jiamu_qi: { name: '甲木真气', cost: 15, desc: '【生发】东方苍龙，木气氤氲。自身叠2层[生机]。(为火系功法提供燎原底材)', type: 'buff', addBuff: 'shengji', stacks: 2 },
-        tianyi_shui: { name: '天一真水', cost: 15, desc: '【凝寒】北方玄武。造成10点伤害，并给敌人附加[潮湿]。(导电、克火)', type: 'attack', baseDmg: 10, addDebuff: 'wet', stacks: 1 },
-        // 攻击与召唤
-        tianpeng_zhou: { name: '天蓬神咒', cost: 25, desc: '【荡魔】造成20点罡气伤害。若自身有[金光]，引爆1层使威力翻倍！', type: 'attack', baseDmg: 20 },
-        zhaolei_fu: { name: '召雷符', cost: 15, desc: '【牵引】造成10点雷伤，给敌人挂1层[雷印]。', type: 'attack', baseDmg: 10, addDebuff: 'leiyin', stacks: 1 },
-        yushu_lei: { name: '玉枢神雷', cost: 25, desc: '【天威】九天应元雷声普化天尊！造成25伤害。若敌方有[雷印]或[潮湿]，雷霆炸裂造成极高爆发。', type: 'attack', baseDmg: 25 },
-        sanmei_huo: { name: '三昧真火', cost: 25, desc: '【炎上】造成15火伤。引爆自身所有[生机]，每层转化为20点真实烈火伤害！', type: 'attack', baseDmg: 15 },
-        yuanshen_jian: { name: '元神剑气', cost: 15, desc: '【出窍】聚气成刃造成15伤害。若自身气血完满，则剑意通神，伤害翻倍。', type: 'attack', baseDmg: 15 },
-        liujia_fu: { name: '六丁六甲', cost: 30, desc: '【役使】召天上六丁六甲神将护法。持续3回合，每回合结束斩邪12点。', type: 'buff', addBuff: 'liujia', stacks: 3 },
-        // --- 肉鸽进阶卡池 ---
-        nanming_huo: { name: '南明离火', cost: 20, desc: '【极炎】造成15伤，并点燃敌人挂1层[焚烧]。', type: 'attack', baseDmg: 15, addDebuff: 'burn', stacks: 1 },
-        wulei_zhengfa: { name: '五雷正法', cost: 40, desc: '【禁术】神霄绝学，五气朝元化五雷！造成45点毁灭性雷伤。', type: 'attack', baseDmg: 45 },
-        taibai_jian: { name: '太白剑诀', cost: 25, desc: '【庚金】西方白虎，主杀伐。造成25点伤害，附带吸血10点。', type: 'attack', baseDmg: 25, heal: 10 },
-        houyi_tu: { name: '戊己厚土', cost: 30, desc: '【承载】中央黄帝之气。结出极厚真元护盾，直接加4层[金光]。', type: 'buff', addBuff: 'jinguang', stacks: 4 }
+        dao_punch: { name: '吐纳/掌心雷', cost: 0, desc: '【攻击】基础术法，造成8点伤害，运转周天恢复5点真元。', quote: '万法之基，绵绵若存。', type: 'attack', baseDmg: 8 },
+        jinguang_zhou: { name: '金光神咒', cost: 15, desc: '【防御】获得2层[金光]护盾(抵挡10伤/层)。', quote: '体有金光，覆映吾身。', type: 'defend', addBuff: 'jinguang', stacks: 2 },
+        kanli_jiao: { name: '坎离交媾', cost: 20, desc: '【防御/化解】完全化解下一次敌方攻击(免疫伤害)。化解成功时反哺20气血。', quote: '取坎填离，柔弱胜刚强。', type: 'defend', addBuff: 'huajie', stacks: 1 },
+        dunjia_yin: { name: '奇门遁形', cost: 20, desc: '【防御/隐匿】遁入虚空，获得[隐匿]1回合(完全免疫下一次伤害)。', quote: '踏罡步斗，匿迹销声。', type: 'defend', addBuff: 'yinni', stacks: 1 },
+        shouyi_jue: { name: '抱元守一', cost: 10, desc: '【恢复】致虚极，守静笃。消耗真元，直接恢复35点气血。', quote: '专气致柔，能婴儿乎？', type: 'support', heal: 35 },
+        tianpeng_zhou: { name: '天蓬神咒', cost: 25, desc: '【攻击】造成22点伤害。若自身有[金光]，引爆1层使威力翻倍！', quote: '天蓬天蓬，九玄杀童。', type: 'attack', baseDmg: 22 },
+        yuanshen_jian: { name: '元神剑气', cost: 20, desc: '【攻击】造成18伤害。若自身气血>90%，剑意通神，伤害翻倍。', quote: '千里取人首级，如探囊取物。', type: 'attack', baseDmg: 18 },
+        liujia_fu: { name: '六丁六甲', cost: 30, desc: '【召唤】持续3回合，每回合结束神将自动斩邪15点。', quote: '呼风唤雨，役使鬼神。', type: 'support', addBuff: 'liujia', stacks: 3 },
+        yushu_lei: { name: '玉枢神雷', cost: 35, desc: '【爆发】造成40点极高雷伤！', quote: '九天应元雷声普化天尊！', type: 'attack', baseDmg: 40 },
+        taiqing_qi: { name: '太清真气', cost: 15, desc: '【增益】直接恢复15点真元，并净化所有负面状态。', quote: '上善若水，涤荡尘埃。', type: 'support', heal: 0 } // special handling for qi
     },
-    // 剧情节点
+    // 节点：交替战斗与奇遇
     nodes: [
-        { type: 'story', img: '🏚️', text: '你遵师命下山云游。行至一处荒村古刹，察觉此地阴气冲天。大殿神像后，一具吸食了百年地煞的怨尸破土而出！', 
-          choices: [{text: '拔剑！降妖伏魔 (进入斗法)', action: 'next'}] },
-        { type: 'battle', enemy: { name: '百年怨尸', hp: 85, dmg: 10, emoji: '🧟' } },
-        { type: 'upgrade' },
-        { type: 'story', img: '⛰️', text: '步入深山老林，见一左道邪修正在采阴补阳、残害生灵。他察觉了你，狞笑着祭出万魂幡。', 
-          choices: [{text: '先发制人！掷出掌心雷 (敌人受创)', action: 'attack_first'}, {text: '闭目守心，结印以待 (恢复真元)', action: 'wait'}] },
-        { type: 'battle', enemy: { name: '左道邪修', hp: 150, dmg: 16, emoji: '🧙‍♂️' } },
-        { type: 'upgrade' },
-        { type: 'story', img: '🌌', text: '你在洞天福地中打坐，正值“子午交息”之时。突然灵台一暗，三毒（贪、嗔、痴）化作你自身的心魔样貌，要在道心上将你抹杀！', 
-          choices: [{text: '堪破虚妄，不退不避！', action: 'next'}] },
-        { type: 'battle', enemy: { name: '三毒心魔相', hp: 280, dmg: 24, emoji: '🌑', boss: true } },
-        { type: 'story', img: '🌤️', text: '九宫破灭，心魔消散。你长舒一口浊气，只觉三花聚顶，五气朝元。红尘历练，才刚刚开始。', choices: [{text: '再次云游 (重入轮回)', action: 'restart'}] }
+        { type: 'story', img: '🏚️', text: '荒村古刹中，一具地煞怨尸破土而出。它动作迟缓，但力量极大。', choices: [{text: '拔剑！(进入战斗)', action: 'next'}] },
+        { type: 'battle', enemy: { name: '百年怨尸', hp: 120, acts: ['attack', 'attack', 'heavy'], heavyName: '尸毒重击', heavyDmg: 35, emoji: '🧟' } },
+        { type: 'upgrade_stats', pts: 3 }, // 给3个加点
+        { type: 'story', img: '📜', text: '你在古刹蒲团下发现一本泛黄的道书残卷。', 
+          choices: [{text: '参悟《清静经》(防御回血)', action: 'get_qingjing'}, {text: '参悟《坐忘论》(挨打回蓝)', action: 'get_zuowang'}] },
+        { type: 'battle', enemy: { name: '左道邪修', hp: 180, acts: ['attack', 'heavy', 'attack'], heavyName: '万魂噬心', heavyDmg: 45, emoji: '🧙‍♂️' } },
+        { type: 'upgrade_skills' }, // 抽技能
+        { type: 'upgrade_stats', pts: 4 },
+        { type: 'story', img: '🌌', text: '子午交息之时，三毒化作心魔相，要在道心上将你抹杀！此魔攻击极高，切不可盲目硬抗。', choices: [{text: '堪破虚妄！', action: 'next'}] },
+        { type: 'battle', enemy: { name: '心魔相', hp: 350, acts: ['heavy', 'attack', 'attack', 'heavy'], heavyName: '心火劫雷', heavyDmg: 80, emoji: '🌑', boss: true } },
+        { type: 'story', img: '🌤️', text: '心魔消散，三花聚顶。红尘历练，才刚刚开始。', choices: [{text: '重入轮回', action: 'restart'}] }
     ]
 };
 
-let player = { hp: 100, maxHp: 100, qi: 50, maxQi: 50, sect: '', skills: [], buffs: {} };
-let enemy = { hp: 100, maxHp: 100, name: '', dmg: 10, buffs: {}, stun: 0 };
+// --- 角色与状态管理 ---
+let stats = { ti: 0, qi: 0, shen: 0, gen: 0, unspent: 0 }; // 基础属性加点
+let player = { hp: 100, maxHp: 100, qi: 50, maxQi: 50, sect: '', skills: [], buffs: {}, passives: [] };
+let enemy = { hp: 100, maxHp: 100, name: '', baseDmg: 10, acts: [], turnIndex: 0, buffs: {} };
 let currentNodeIndex = 0;
+let currentSelectedSkillKey = null;
 
-const views = { sect: document.getElementById('view-sect'), story: document.getElementById('view-story'), battle: document.getElementById('view-battle'), upgrade: document.getElementById('view-upgrade') };
 const els = {
-    barHp: document.getElementById('barHp'), valHp: document.getElementById('valHp'), valMaxHp: document.getElementById('valMaxHp'),
-    barQi: document.getElementById('barQi'), valQi: document.getElementById('valQi'), valMaxQi: document.getElementById('valMaxQi'),
+    barHp: document.getElementById('barHp'), valHpText: document.getElementById('valHpText'),
+    barQi: document.getElementById('barQi'), valQiText: document.getElementById('valQiText'),
     realmBadge: document.getElementById('realmBadge'), log: document.getElementById('battleLog'),
     buffPlayer: document.getElementById('buffPlayer'), buffEnemy: document.getElementById('buffEnemy'),
-    enemyHpFill: document.getElementById('barEnemyHp'), valEnemyHp: document.getElementById('valEnemyHp'), avatarEnemy: document.getElementById('avatarEnemy')
+    barEnemyHp: document.getElementById('barEnemyHp'), valEnemyHpText: document.getElementById('valEnemyHpText'),
+    enemyIntent: document.getElementById('enemyIntent'), passiveZone: document.getElementById('passiveZone')
 };
 
+// 计算实际属性面板
+function calcPlayerStats() {
+    let oldMaxHp = player.maxHp;
+    let oldMaxQi = player.maxQi;
+    player.maxHp = 100 + stats.ti * 10;
+    player.maxQi = 50 + stats.qi * 5;
+    // 升级保持血量比例或直接加满
+    if(player.maxHp > oldMaxHp) player.hp += (player.maxHp - oldMaxHp);
+    if(player.maxQi > oldMaxQi) player.qi += (player.maxQi - oldMaxQi);
+}
+
+// UI 切换与更新
 function switchView(viewName) {
-    Object.values(views).forEach(v => v.classList.remove('active'));
-    views[viewName].classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + viewName).classList.add('active');
     document.getElementById('topBar').style.display = (viewName === 'sect') ? 'none' : 'flex';
 }
 
@@ -235,71 +316,85 @@ function showFloat(targetId, text, type) {
     el.className = 'floating-text';
     el.textContent = text;
     el.style.color = type === 'dmg' ? '#d65c5c' : type === 'heal' ? '#6bba6b' : '#d4af37';
-    el.style.left = (target.offsetLeft + Math.random()*20) + 'px';
+    el.style.left = (target.offsetLeft + (Math.random()*30-15)) + 'px';
     el.style.top = (target.offsetTop - 20) + 'px';
     target.parentElement.appendChild(el);
     setTimeout(() => el.remove(), 1200);
 }
 
 function logMsg(msg, type='') {
-    const p = document.createElement('p');
-    p.innerHTML = msg;
-    if(type) p.className = 'log-' + type;
-    els.log.appendChild(p);
-    els.log.scrollTop = els.log.scrollHeight;
+    const p = document.createElement('p'); p.innerHTML = msg; if(type) p.className = 'log-' + type;
+    els.log.appendChild(p); els.log.scrollTop = els.log.scrollHeight;
 }
 
 function updateUI() {
-    els.valHp.textContent = player.hp; els.valMaxHp.textContent = player.maxHp;
+    calcPlayerStats(); // Ensure stats are up to date
+    els.valHpText.textContent = `${Math.floor(player.hp)}/${player.maxHp}`;
     els.barHp.style.width = (player.hp / player.maxHp * 100) + '%';
-    els.valQi.textContent = player.qi; els.valMaxQi.textContent = player.maxQi;
+    els.valQiText.textContent = `${Math.floor(player.qi)}/${player.maxQi}`;
     els.barQi.style.width = (player.qi / player.maxQi * 100) + '%';
     
-    els.valEnemyHp.textContent = enemy.hp;
-    els.enemyHpFill.style.width = (enemy.hp / enemy.maxHp * 100) + '%';
-    
-    const buffNames = {
-        'jinguang': '金光', 'huajie': '化解', 'yinni': '遁形', 'shengji': '生机', 'liujia': '六甲神将',
-        'wet': '潮湿', 'leiyin': '雷印', 'burn': '焚烧'
-    };
-
-    const renderBuff = (buffs, container) => {
-        container.innerHTML = '';
-        for(let k in buffs) {
-            if(buffs[k] > 0) {
-                let span = document.createElement('span');
-                span.className = 'buff-tag';
-                span.textContent = `${buffNames[k]||k}:${buffs[k]}`;
-                container.appendChild(span);
-            }
-        }
-    };
-    renderBuff(player.buffs, els.buffPlayer);
-    renderBuff(enemy.buffs, els.buffEnemy);
-
-    // 技能组合高亮
-    document.querySelectorAll('.skill-btn').forEach(btn => {
-        let key = btn.dataset.key;
-        let skill = DATA.skillPool[key];
-        btn.disabled = player.qi < skill.cost;
-        btn.classList.remove('combo-ready');
+    if(document.getElementById('view-battle').classList.contains('active')) {
+        els.valEnemyHpText.textContent = `${Math.floor(enemy.hp)}/${enemy.maxHp}`;
+        els.barEnemyHp.style.width = (enemy.hp / enemy.maxHp * 100) + '%';
         
-        // 连招判定
-        if(key === 'tianpeng_zhou' && player.buffs['jinguang'] > 0) btn.classList.add('combo-ready');
-        if(key === 'sanmei_huo' && player.buffs['shengji'] > 0) btn.classList.add('combo-ready');
-        if(key === 'yushu_lei' && (enemy.buffs['leiyin'] > 0 || enemy.buffs['wet'] > 0)) btn.classList.add('combo-ready');
-    });
+        // 渲染Buff
+        const renderB = (b, container) => {
+            container.innerHTML = '';
+            for(let k in b) if(b[k] > 0) {
+                let span = document.createElement('span'); span.className = 'buff-tag';
+                let n = k==='jinguang'?'金光':k==='huajie'?'化解':k==='yinni'?'隐匿':k==='liujia'?'六甲':k;
+                span.textContent = `${n}:${b[k]}`; container.appendChild(span);
+            }
+        };
+        renderB(player.buffs, els.buffPlayer); renderB(enemy.buffs, els.buffEnemy);
+
+        // 渲染心法
+        els.passiveZone.innerHTML = '';
+        player.passives.forEach(pk => {
+            let d = document.createElement('div'); d.className = 'passive-book';
+            d.textContent = DATA.passives[pk].name; els.passiveZone.appendChild(d);
+        });
+
+        // 技能按钮刷新
+        document.querySelectorAll('.skill-btn').forEach(btn => {
+            let key = btn.dataset.key; let s = DATA.skillPool[key];
+            btn.disabled = player.qi < s.cost;
+            btn.classList.remove('combo-ready', 'selected');
+            if(key === currentSelectedSkillKey) btn.classList.add('selected');
+            if(key === 'tianpeng_zhou' && player.buffs['jinguang'] > 0) btn.classList.add('combo-ready');
+            if(key === 'yuanshen_jian' && player.hp >= player.maxHp*0.9) btn.classList.add('combo-ready');
+        });
+
+        if(currentSelectedSkillKey) document.getElementById('btnCast').disabled = (player.qi < DATA.skillPool[currentSelectedSkillKey].cost);
+    }
 }
 
+// --- 加点系统 ---
+function openStatsModal() {
+    document.getElementById('statsModal').style.display = 'flex';
+    updateStatsModal();
+    document.getElementById('btnStats').classList.remove('pulse');
+}
+function closeStatsModal() { document.getElementById('statsModal').style.display = 'none'; updateUI(); }
+function updateStatsModal() {
+    document.getElementById('statPoints').textContent = stats.unspent;
+    ['ti', 'qi', 'shen', 'gen'].forEach(k => document.getElementById(`valStat${k.charAt(0).toUpperCase() + k.slice(1)}`).textContent = stats[k]);
+}
+window.addStat = function(key, val) {
+    if(val > 0 && stats.unspent > 0) { stats[key]++; stats.unspent--; }
+    else if(val < 0 && stats[key] > 0) { stats[key]--; stats.unspent++; }
+    updateStatsModal();
+}
+
+// --- 流程控制 ---
 window.selectSect = function(sectKey) {
-    let s = DATA.sects[sectKey];
-    player.sect = s.name;
-    player.maxHp = s.hp; player.hp = s.hp;
-    player.maxQi = s.qi; player.qi = s.qi;
-    player.skills = [...s.skills];
-    player.buffs = {};
-    currentNodeIndex = 0;
-    els.realmBadge.textContent = DATA.realms[0];
+    player.sect = DATA.sects[sectKey].name;
+    stats = { ti: 0, qi: 0, shen: 0, gen: 0, unspent: 0 };
+    player.skills = [...DATA.sects[sectKey].skills];
+    player.buffs = {}; player.passives = [];
+    calcPlayerStats(); player.hp = player.maxHp; player.qi = player.maxQi;
+    currentNodeIndex = 0; els.realmBadge.textContent = DATA.realms[0];
     runNode();
 };
 
@@ -311,16 +406,13 @@ function runNode() {
         switchView('story');
         document.getElementById('storyImg').textContent = node.img;
         document.getElementById('storyText').innerHTML = node.text;
-        let cDiv = document.getElementById('storyChoices');
-        cDiv.innerHTML = '';
+        let cDiv = document.getElementById('storyChoices'); cDiv.innerHTML = '';
         node.choices.forEach(c => {
-            let btn = document.createElement('div');
-            btn.className = 'choice-btn';
-            btn.textContent = c.text;
+            let btn = document.createElement('div'); btn.className = 'choice-btn'; btn.textContent = c.text;
             btn.onclick = () => {
-                if(c.action === 'attack_first') { DATA.nodes[currentNodeIndex+1].enemy.hp -= 30; } 
-                else if(c.action === 'wait') { player.qi = player.maxQi; }
-                else if(c.action === 'restart') { location.reload(); return; }
+                if(c.action === 'get_qingjing') player.passives.push('qingjing');
+                if(c.action === 'get_zuowang') player.passives.push('zuowang');
+                if(c.action === 'restart') { location.reload(); return; }
                 currentNodeIndex++; runNode();
             };
             cDiv.appendChild(btn);
@@ -329,167 +421,193 @@ function runNode() {
     else if(node.type === 'battle') {
         startBattle(node.enemy);
     }
-    else if(node.type === 'upgrade') {
+    else if(node.type === 'upgrade_skills') {
         switchView('upgrade');
         els.realmBadge.textContent = DATA.realms[Math.min(DATA.realms.length-1, Math.floor(currentNodeIndex/2))];
-        let pool = Object.keys(DATA.skillPool).filter(k => !player.skills.includes(k) && k !== 'dao_punch');
-        pool = pool.sort(() => 0.5 - Math.random()).slice(0, 3); 
-        
-        let cDiv = document.getElementById('upgradeCards');
-        cDiv.innerHTML = '';
+        let pool = Object.keys(DATA.skillPool).filter(k => !player.skills.includes(k) && k !== 'dao_punch').sort(()=>0.5-Math.random()).slice(0,3);
+        let cDiv = document.getElementById('upgradeCards'); cDiv.innerHTML = '';
         pool.forEach(k => {
-            let s = DATA.skillPool[k];
-            let card = document.createElement('div');
-            card.className = 'upgrade-card';
-            card.innerHTML = `<h3>${s.name} <span class="tag">真元 -${s.cost}</span></h3><p>${s.desc}</p>`;
-            card.onclick = () => {
-                player.skills.push(k);
-                currentNodeIndex++; runNode();
-            };
+            let s = DATA.skillPool[k]; let card = document.createElement('div'); card.className = 'upgrade-card';
+            card.innerHTML = `<h3>${s.name} <span style="font-size:0.7rem; color:#5a9ab8;">真元 -${s.cost}</span></h3><p>${s.desc}</p>`;
+            card.onclick = () => { player.skills.push(k); currentNodeIndex++; runNode(); };
             cDiv.appendChild(card);
         });
+    }
+    else if(node.type === 'upgrade_stats') {
+        stats.unspent += node.pts;
+        document.getElementById('btnStats').classList.add('pulse'); // 提示加点
+        logMsg(`境界提升，获得 ${node.pts} 点悟性。请点击上方【修】字分配。`, 'log-dao');
+        openStatsModal();
+        currentNodeIndex++; runNode();
     }
     updateUI();
 }
 
+// --- 战斗系统逻辑 ---
 function startBattle(eData) {
     switchView('battle');
-    enemy = { hp: eData.hp, maxHp: eData.hp, name: eData.name, dmg: eData.dmg, buffs: {}, stun: 0 };
-    document.getElementById('nameEnemy').textContent = enemy.name;
-    els.avatarEnemy.textContent = eData.emoji;
-    els.log.innerHTML = '';
-    logMsg(`遭遇 <strong>${enemy.name}</strong>，斗法开始！`, 'buff');
+    enemy = { hp: eData.hp, maxHp: eData.hp, name: eData.name, acts: eData.acts, turnIndex: 0, baseDmg: eData.boss ? 15 : 10, heavyName: eData.heavyName, heavyDmg: eData.heavyDmg, buffs: {} };
+    document.getElementById('nameEnemy').textContent = enemy.name; document.getElementById('avatarEnemy').textContent = eData.emoji;
+    els.log.innerHTML = ''; logMsg(`遭遇 <strong>${enemy.name}</strong>，斗法开始！`, 'buff');
     
-    let sBox = document.getElementById('skillContainer');
-    sBox.innerHTML = '';
+    cancelSkill(); updateEnemyIntent();
+    
+    let sBox = document.getElementById('skillContainer'); sBox.innerHTML = '';
     player.skills.forEach(k => {
-        let s = DATA.skillPool[k];
-        let btn = document.createElement('button');
-        btn.className = 'skill-btn';
-        btn.dataset.key = k;
-        btn.innerHTML = `<strong>${s.name}</strong><span class="cost">真元 -${s.cost}</span>`;
-        btn.onclick = () => useSkill(k);
-        sBox.appendChild(btn);
+        let s = DATA.skillPool[k]; let btn = document.createElement('button'); btn.className = 'skill-btn'; btn.dataset.key = k;
+        btn.innerHTML = `<strong>${s.name}</strong><br><span style="font-size:0.6rem; color:#5a9ab8;">真元 -${s.cost}</span>`;
+        btn.onclick = () => selectSkill(k); sBox.appendChild(btn);
     });
     updateUI();
 }
 
-function useSkill(key) {
-    let s = DATA.skillPool[key];
+function updateEnemyIntent() {
+    let act = enemy.acts[enemy.turnIndex % enemy.acts.length];
+    if(act === 'heavy') {
+        els.enemyIntent.textContent = `蓄力：${enemy.heavyName} (${enemy.heavyDmg}伤)`;
+        els.enemyIntent.className = 'intent-box intent-charge';
+        els.enemyIntent.style.display = 'block';
+    } else {
+        els.enemyIntent.textContent = `意图：普通攻击`;
+        els.enemyIntent.className = 'intent-box';
+        els.enemyIntent.style.display = 'block';
+    }
+}
+
+window.selectSkill = function(key) {
+    currentSelectedSkillKey = key; let s = DATA.skillPool[key];
+    document.getElementById('skillDetailPanel').style.display = 'block';
+    document.getElementById('detailName').innerHTML = `${s.name} <span style="color:#5a9ab8; font-size:0.85rem;">真元 -${s.cost}</span>`;
+    document.getElementById('detailQuote').textContent = `“${s.quote}”`;
+    document.getElementById('detailDesc').innerHTML = s.desc;
+    updateUI();
+};
+
+window.cancelSkill = function() {
+    currentSelectedSkillKey = null; document.getElementById('skillDetailPanel').style.display = 'none'; updateUI();
+};
+
+window.executeSkill = function() {
+    if(!currentSelectedSkillKey) return;
+    let key = currentSelectedSkillKey; let s = DATA.skillPool[key];
     if(player.qi < s.cost) return;
     
-    player.qi -= s.cost;
+    cancelSkill(); player.qi -= s.cost;
+    logMsg(`施展 【${s.name}】。`);
+
+    let isAttack = (s.type === 'attack');
+
+    // 1. 神识加成伤害
     let dmg = s.baseDmg || 0;
-    logMsg(`捻诀念咒，施展 【${s.name}】。`);
+    if(dmg > 0) dmg = Math.floor(dmg * (1 + stats.shen * 0.05)); 
 
+    // 2. 技能特殊逻辑
     if(key === 'dao_punch') player.qi = Math.min(player.maxQi, player.qi + 5);
+    if(key === 'taiqing_qi') player.qi = Math.min(player.maxQi, player.qi + 15);
     
-    if(s.addBuff) {
-        player.buffs[s.addBuff] = (player.buffs[s.addBuff] || 0) + s.stacks;
-        showFloat('avatarPlayer', '+状态', 'buff');
-    }
-    if(s.addDebuff) {
-        enemy.buffs[s.addDebuff] = (enemy.buffs[s.addDebuff] || 0) + s.stacks;
-    }
-    if(s.heal) {
-        player.hp = Math.min(player.maxHp, player.hp + s.heal);
-        showFloat('avatarPlayer', `+${s.heal}`, 'heal');
-    }
-    if(key === 'sajing_shui') { player.buffs = {}; logMsg('净水荡涤，浊气全消！', 'heal'); }
+    if(s.addBuff) { player.buffs[s.addBuff] = (player.buffs[s.addBuff] || 0) + s.stacks; showFloat('avatarPlayer', '+状态', 'buff'); }
+    if(s.heal) { player.hp = Math.min(player.maxHp, player.hp + s.heal); showFloat('avatarPlayer', `+${s.heal}`, 'heal'); }
 
-    // 【道藏核心五行/组合爆发】
+    // 组合技
     if(key === 'tianpeng_zhou' && player.buffs['jinguang'] > 0) {
-        player.buffs['jinguang']--;
-        dmg *= 2;
-        logMsg('💥 <strong>金光化入神咒，罡气透体穿透！</strong>', 'dmg');
-        document.getElementById('avatarPlayer').classList.add('shake');
+        player.buffs['jinguang']--; dmg *= 2; logMsg('💥 <strong>金光化入神咒，罡气透体穿透！</strong>', 'dmg');
     }
-    if(key === 'sanmei_huo' && player.buffs['shengji'] > 0) {
-        let stacks = player.buffs['shengji'];
-        player.buffs['shengji'] = 0;
-        dmg += stacks * 20;
-        logMsg(`💥 <strong>木能生火！引爆${stacks}层甲木生机，三昧真火燎原！</strong>`, 'dmg');
-    }
-    if(key === 'yushu_lei' && (enemy.buffs['leiyin'] > 0 || enemy.buffs['wet'] > 0)) {
-        if(enemy.buffs['leiyin'] > 0) { enemy.buffs['leiyin']--; dmg *= 2; logMsg(`⚡ <strong>引动雷印，玉枢神雷狂暴摧毁！</strong>`, 'dmg'); }
-        else if (enemy.buffs['wet'] > 0) { enemy.buffs['wet']--; dmg = Math.floor(dmg * 1.5); logMsg(`⚡ <strong>天一真水导电，雷霆震破邪祟！</strong>`, 'dmg'); }
-    }
-    if(key === 'yuanshen_jian' && player.hp === player.maxHp) {
-        dmg *= 2; logMsg('✨ 气血圆满，元神出窍剑意通玄！', 'buff');
+    if(key === 'yuanshen_jian' && player.hp >= player.maxHp * 0.9) {
+        dmg *= 2; logMsg('✨ 气血完满，元神出窍剑意通玄！', 'buff');
     }
 
+    // 结算伤害与吸血
     if(dmg > 0) {
         enemy.hp = Math.max(0, enemy.hp - dmg);
         showFloat('avatarEnemy', `-${dmg}`, 'dmg');
-        document.getElementById('avatarEnemy').classList.add('shake');
-        setTimeout(() => document.getElementById('avatarEnemy').classList.remove('shake'), 300);
+        document.getElementById('avatarEnemy').classList.add('shake-fx');
+        setTimeout(() => document.getElementById('avatarEnemy').classList.remove('shake-fx'), 300);
         logMsg(`对妖邪造成 <span class="log-dmg">${dmg}</span> 损伤。`);
+        
+        // 被动：雷斋戒吸血
+        if(player.passives.includes('leizhai')) {
+            let lHeal = Math.floor(dmg * 0.2);
+            if(lHeal > 0) { player.hp = Math.min(player.maxHp, player.hp + lHeal); showFloat('avatarPlayer', `+${lHeal}吸血`, 'heal'); }
+        }
+    }
+
+    // 被动：清静经 (不攻击时回血)
+    if(!isAttack && player.passives.includes('qingjing')) {
+        let qHeal = Math.floor(player.maxHp * 0.1);
+        player.hp = Math.min(player.maxHp, player.hp + qHeal);
+        logMsg('📜 诵读《清静经》，心定神宁，恢复气血。', 'heal');
+        showFloat('avatarPlayer', `+${qHeal}`, 'heal');
     }
 
     updateUI();
     if(enemy.hp <= 0) {
+        els.enemyIntent.style.display = 'none';
         logMsg('太上敕令，邪祟伏诛！', 'buff');
         setTimeout(() => { currentNodeIndex++; runNode(); }, 1500);
     } else {
-        disableSkills(true);
-        setTimeout(enemyTurn, 900);
+        document.querySelectorAll('.skill-btn').forEach(b=>b.disabled=true);
+        setTimeout(enemyTurn, 1000);
     }
-}
+};
 
 function enemyTurn() {
-    // 护法神将回合结算
+    // 护法结算
     if(player.buffs['liujia'] > 0) {
-        player.buffs['liujia']--;
-        enemy.hp -= 12;
-        logMsg('🛡️ 六丁六甲神将挥动金斧，斩邪 12 点。');
-        showFloat('avatarEnemy', '-12', 'dmg');
+        player.buffs['liujia']--; enemy.hp -= 15;
+        logMsg('🛡️ 六甲神将挥动金斧，斩邪 15 点。'); showFloat('avatarEnemy', '-15', 'dmg');
         if(enemy.hp <= 0) { updateUI(); setTimeout(() => { currentNodeIndex++; runNode(); }, 1000); return; }
     }
 
-    let dmg = enemy.dmg + Math.floor(Math.random() * 5);
-    
+    let act = enemy.acts[enemy.turnIndex % enemy.acts.length];
+    let eDmg = act === 'heavy' ? enemy.heavyDmg : (enemy.baseDmg + Math.floor(Math.random()*6));
+    let blocked = false;
+
+    // 玩家防御结算
     if(player.buffs['yinni'] > 0) {
-        player.buffs['yinni']--;
-        logMsg('🌫️ 奇门遁形，妖邪丢失了你的方位。', 'buff');
-        showFloat('avatarPlayer', '隐匿', 'buff');
+        player.buffs['yinni']--; blocked = true;
+        logMsg('🌫️ 奇门遁形，妖邪的致命一击打在了虚空处。', 'buff'); showFloat('avatarPlayer', '完美闪避', 'buff');
     } 
     else if(player.buffs['huajie'] > 0) {
-        player.buffs['huajie']--;
-        let heal = 15; player.hp = Math.min(player.maxHp, player.hp + heal);
-        logMsg('☯️ 坎离流转，四两拨千斤，化解煞气并反哺元神。', 'heal');
-        showFloat('avatarPlayer', '化解', 'buff');
+        player.buffs['huajie']--; blocked = true;
+        let h = 20; player.hp = Math.min(player.maxHp, player.hp + h);
+        logMsg('☯️ 坎离流转！完美化解攻击，并借力打力反哺元神。', 'heal'); showFloat('avatarPlayer', `+${h}化解`, 'heal');
     }
     else {
+        // 根骨减伤计算
+        let reduction = stats.gen * 0.02; // 每点2%减伤
+        eDmg = Math.floor(eDmg * (1 - reduction));
+
         if(player.buffs['jinguang'] > 0) {
-            dmg = Math.max(0, dmg - 10);
-            player.buffs['jinguang']--;
-            logMsg('✨ 金光护体，隔绝了部分阴邪煞气。');
+            let blockAmt = Math.min(eDmg, 10);
+            eDmg -= blockAmt; player.buffs['jinguang']--;
+            logMsg('✨ 金光护体抵消了部分伤害。');
         }
-        player.hp = Math.max(0, player.hp - dmg);
-        logMsg(`妖邪反扑，对你造成 <span class="log-dmg">${dmg}</span> 损伤。`);
-        showFloat('avatarPlayer', `-${dmg}`, 'dmg');
-        document.getElementById('avatarPlayer').classList.add('shake');
-        setTimeout(() => document.getElementById('avatarPlayer').classList.remove('shake'), 300);
+        
+        if(eDmg > 0) {
+            player.hp = Math.max(0, player.hp - eDmg);
+            logMsg(`妖邪反扑，对你造成 <span class="log-dmg">${eDmg}</span> 损伤。`);
+            showFloat('avatarPlayer', `-${eDmg}`, 'dmg');
+            document.getElementById('avatarPlayer').classList.add('shake-fx');
+            setTimeout(() => document.getElementById('avatarPlayer').classList.remove('shake-fx'), 300);
+
+            // 被动：坐忘论挨打回蓝
+            if(player.passives.includes('zuowang')) {
+                player.qi = Math.min(player.maxQi, player.qi + 10);
+                logMsg('📜 坐忘无我，受击激发了先天真元。', 'log-dao');
+            }
+        }
     }
 
     player.qi = Math.min(player.maxQi, player.qi + 5); 
+    enemy.turnIndex++;
+    updateEnemyIntent();
     updateUI();
-    disableSkills(false);
 
     if(player.hp <= 0) {
+        els.enemyIntent.style.display = 'none';
         logMsg('💀 道心失守，灵台崩坏... 你的修道之途陨落了。', 'log-dmg');
         setTimeout(() => location.reload(), 2500);
     }
-}
-
-function disableSkills(disabled) {
-    document.querySelectorAll('.skill-btn').forEach(btn => {
-        if(disabled) btn.disabled = true;
-        else {
-            let s = DATA.skillPool[btn.dataset.key];
-            btn.disabled = player.qi < s.cost;
-        }
-    });
 }
 </script>
 </body>
