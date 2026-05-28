@@ -43,7 +43,7 @@
         .tag.golden { color: #d4af37; border-color: #d4af37; background: rgba(212,175,55,0.1); }
         .sect-group { grid-column: span 2; font-size: 0.9rem; color: #8b6b43; border-bottom: 1px dashed #423526; padding-bottom: 4px; margin-top: 10px; }
         
-        /* 对话系统 (VN) */
+        /* 对话系统 */
         .vn-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; position: relative; padding-bottom: 20px; }
         .vn-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 30%; background-position: center; background-size: cover; border-radius: 8px; opacity: 0.6; mask-image: linear-gradient(to bottom, black 50%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); transition: background-image 0.5s ease; }
         .vn-character { position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); font-size: 8rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: opacity 0.3s, transform 0.3s; }
@@ -87,7 +87,6 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
         .modal-content { background: #16181d; border: 2px solid #524231; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; }
         .modal h3 { color: #d4af37; text-align: center; margin-bottom: 16px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
-        
         .stat-row-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #1a1c22; padding: 8px 12px; border-radius: 6px; }
         .stat-name { font-weight: bold; color: #e6c888; font-size: 0.95rem; display: block; }
         .stat-desc { font-size: 0.7rem; color: #888; }
@@ -251,6 +250,7 @@
 </div>
 
 <script>
+/* ================= 核心数据字典 ================= */
 const DB = {
     realms: ['未入道', '入门弟子', '练气小成', '练气大圆满', '筑基真人', '结丹宗师', '金丹大道', '元婴老怪'],
     origins: {
@@ -271,11 +271,13 @@ const DB = {
         jinguang: { name: '金光神咒', cost: 15, desc: '【防御】获得2层[金光]护盾(抵挡10伤/层)。', type: 'defend', buff: 'jinguang', stacks: 2 },
         tianpeng: { name: '天蓬神咒', cost: 25, desc: '【爆发】造成22伤。若有[金光]，消耗1层使伤害翻倍！', type: 'attack', tags: ['lei'], dmg: 22 },
         zhaolei: { name: '召雷符', cost: 10, cd: 2, desc: '【削弱】造成10伤，给敌挂3层[雷印](每回受8雷击)。冷却2回。', type: 'attack', tags: ['lei'], dmg: 10, debuff: 'leiyin', stacks: 3 },
-        yushu: { name: '玉枢神雷', cost: 30, desc: '【爆发】造成25伤。动态引爆[雷印]，每层额外耗5蓝并加50%伤害！', type: 'attack', tags: ['lei'], dmg: 25 },
+        // 【核心修复：下调引爆技的基础伤害，引爆伤害改为固定真伤叠加】
+        yushu: { name: '玉枢神雷', cost: 20, desc: '【爆发】造成10伤。引爆敌方所有[雷印]，每层额外耗5蓝并追加20点雷伤！', type: 'attack', tags: ['lei'], dmg: 10 },
         shouyi: { name: '抱元守一', cost: 10, desc: '【恢复】直接恢复40气血。', type: 'support', heal: 40 },
         yuanshen: { name: '元神剑气', cost: 20, desc: '【爆发】造成20伤。若你气血 >= 90%，剑意通神伤害翻倍。', type: 'attack', dmg: 20 },
         jiamu: { name: '甲木真气', cost: 15, desc: '【辅助】获得4层[生机](每回合恢复5点气血)。', type: 'support', buff: 'shengji', stacks: 4 },
-        sanmei: { name: '三昧真火', cost: 25, desc: '【爆发】造成20火伤。动态引爆[生机]，每层额外耗5蓝并加25点真实伤害。', type: 'attack', tags: ['huo'], dmg: 20 },
+        sanmei: { name: '三昧真火', cost: 20, desc: '【爆发】造成10火伤。引爆所有[生机]，每层额外耗5蓝并追加25点真伤！', type: 'attack', tags: ['huo'], dmg: 10 },
+        
         kanli: { name: '坎离交媾', cost: 20, desc: '【防御】化解下次敌方攻击并恢复25气血。', type: 'defend', buff: 'huajie', stacks: 1 },
         dunjia: { name: '奇门遁甲', cost: 20, desc: '【防御】遁入虚空，获得[隐匿](免疫下一次伤害)。', type: 'defend', buff: 'yinni', stacks: 1 },
         liujia: { name: '六丁六甲', cost: 30, cd: 4, desc: '【召唤】持续3回，每回自动斩邪15点。冷却4回。', type: 'support', buff: 'liujia', stacks: 3 },
@@ -284,7 +286,9 @@ const DB = {
         wulei: { name: '五雷正法', cost: 40, cd: 3, desc: '【绝学】造成50点毁灭雷伤！冷却3回。', type: 'attack', tags: ['lei'], dmg: 50 },
         taiqing: { name: '太清真气', cost: 0, desc: '【调息】不攻击，直接恢复25点真元。', type: 'support', heal: 0 }
     },
+    // ================== 第一卷 + 第二卷 完整剧本 ==================
     script: [
+        // ---------------- 第一卷 ----------------
         { type: 'vn', scene: [{ char: '🧔', name: '传功长老', text: '“这尊百年铁木人桩，你且全力击打，让我看看成色！”' }] },
         { type: 'battle', enemy: { name: '铁木人桩', hp: 60, acts: ['weak', 'weak'], emoji: '🪵', baseDmg: 5, desc: '毫无威胁，请熟悉【法术组合】与【光效反馈】。' } },
         { type: 'vn', scene: [{ char: '📜', name: '道藏感悟', text: '“老君曰：大道无形，生育天地... 人能常清静，天地悉皆归。” ——《清静经》', bg: '#1a1c22' }] },
@@ -316,6 +320,7 @@ const DB = {
                 { text: '“不争而善胜，兵者不祥，当常清静。”', correct: true }
             ]}
         ]},
+        // ---------------- 第二卷 ----------------
         { type: 'vn', scene: [
             { char: '🌅', name: '天道提示', text: '“心魔破除，你已正式迈入修真大道。”' },
             { char: '📜', name: '卷轴展开', text: '【第二卷：幽冥鬼府】', bg: '#0f1115' },
@@ -631,11 +636,12 @@ const battle = {
         if(s.cd) state.player.cds[k] = s.cd; 
         ui.log(`施展 【${s.name}】。`);
 
+        // 【核心修复：加法计算伤害乘区，数值更平稳】
         let dmg = s.dmg || 0;
         if(dmg > 0) {
-            let realmBonus = 1 + (state.realmIdx * 0.15); 
-            let statBonus = 1 + (state.stats.shen * 0.10);  
-            dmg = Math.floor(dmg * realmBonus * statBonus); 
+            let realmBonus = state.realmIdx * 0.15; 
+            let statBonus = state.stats.shen * 0.10;  
+            dmg = Math.floor(dmg * (1 + realmBonus + statBonus)); 
         }
         
         if(state.player.sectPass === 'shenxiao' && s.tags?.includes('lei')) { dmg = Math.floor(dmg * 1.15); ui.log('【神霄】九天轰鸣，雷法威力更盛！'); }
@@ -655,6 +661,7 @@ const battle = {
         if(s.type === 'defend' || s.buff === 'jinguang') ui.playFx('boxPlayer', 'fx-shield', 700); 
         if(s.heal || s.buff === 'shengji') ui.playFx('boxPlayer', 'fx-heal', 900); 
 
+        // 连招引爆机制
         if(k === 'tianpeng' && state.player.buffs['jinguang']>0) { state.player.buffs['jinguang']--; dmg *= 2; ui.log('💥 金光化雷，威力翻倍！', 'log-dmg'); }
         
         if(k === 'yushu' && state.enemy.buffs['leiyin']>0) { 
@@ -664,13 +671,16 @@ const battle = {
             if(actualExplode > 0) {
                 state.player.qi -= (actualExplode * 5);
                 state.enemy.buffs['leiyin'] -= actualExplode;
-                dmg = Math.floor(dmg * (1 + 0.5 * actualExplode));
-                ui.log(`⚡ 【雷霆共鸣】引爆 ${actualExplode} 层雷印！动态追加消耗 ${actualExplode*5} 点真元。`, 'log-dmg');
+                // 【核心修复：引爆伤害改为固定追加，彻底杜绝乘区爆炸】
+                let extraDmg = actualExplode * 20;
+                dmg += extraDmg;
+                ui.log(`⚡ 【雷霆共鸣】引爆 ${actualExplode} 层雷印！追加 ${extraDmg} 真实雷伤。`, 'log-dmg');
                 ui.playFx('boxEnemy', 'fx-lightning', 600); 
             } else {
                 ui.log(`❌ 真元见底，无法供能引爆其余雷印！`, 'log-sys');
             }
         }
+        
         if(k === 'sanmei' && state.player.buffs['shengji']>0) { 
             let st = state.player.buffs['shengji'];
             let maxAfford = Math.floor(state.player.qi / 5);
@@ -678,8 +688,9 @@ const battle = {
             if(actualExplode > 0) {
                 state.player.qi -= (actualExplode * 5);
                 state.player.buffs['shengji'] -= actualExplode;
-                dmg += actualExplode * 25;
-                ui.log(`💥 【木火燎原】引爆 ${actualExplode} 层生机！动态追加消耗 ${actualExplode*5} 点真元。`, 'log-dmg');
+                let extraDmg = actualExplode * 25;
+                dmg += extraDmg;
+                ui.log(`💥 【木火燎原】引爆 ${actualExplode} 层生机！追加 ${extraDmg} 真实火伤。`, 'log-dmg');
                 ui.playFx('boxEnemy', 'fx-fire', 800); 
             } else {
                 ui.log(`❌ 真元见底，无法供能引爆体内生机！`, 'log-sys');
@@ -780,7 +791,8 @@ const battle = {
                 ui.log(`☯️ 运转坎离！完美借力化解了敌方的 【${skillName}】 并反哺气血。`, 'log-heal'); ui.float('batPlayerAv', `+${h}化解`, 'log-heal');
                 ui.playFx('boxPlayer', 'fx-heal', 500);
             }
-            else {
+            
+            if(!blocked) {
                 if(state.player.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.player.buffs['chihuan']--; } 
                 eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.04)); 
                 
@@ -801,7 +813,7 @@ const battle = {
                     document.getElementById('batPlayerAv').classList.add('shake-fx');
                     setTimeout(()=>document.getElementById('batPlayerAv').classList.remove('shake-fx'), 300);
 
-                    // 敌方重击的特殊负面效果
+                    // 【核心修复：确立真正的负面状态附加结算】
                     if(act === 'heavy') {
                         if(state.enemy.name === '嚣张师兄') {
                             state.player.qi = Math.max(0, state.player.qi - 20);
