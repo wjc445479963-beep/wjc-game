@@ -169,7 +169,7 @@
         <div class="battle-stage">
             <div class="combatant">
                 <div class="avatar" id="batPlayerAv">🧘‍♂️</div>
-                <div class="name">你 (筑基期)</div>
+                <div class="name">你 (修行中)</div>
                 <div class="buff-zone" id="batPlayerBuff"></div>
             </div>
             <div style="font-weight:bold; color:#8b6b43; font-size:1.5rem; font-style:italic;">VS</div>
@@ -282,7 +282,7 @@ const DB = {
         ]},
         { type: 'battle', enemy: { name: '贪妄心魔', hp: 450, acts: ['attack', 'attack', 'heavy', 'heavy'], heavyName: '九渊天劫', heavyDmg: 80, emoji: '🌑', baseDmg: 25, desc: '最终考验！合理分配真元，运用五行连招与化解，向死而生！', boss: true } },
         { type: 'vn', scene: [
-            { char: '🌅', name: '系统', text: '“心魔消散，大道可期。恭喜通关《太虚劫》序章！”', bg: '#2a2a1a' }
+            { char: '🌅', name: '系统', text: '“心魔消散，大道可期。恭喜通关《太虚劫》！”', bg: '#2a2a1a' }
         ]},
         { type: 'end' }
     ]
@@ -294,14 +294,22 @@ let state = {
     stats: { ti: 0, qi: 0, shen: 0, gen: 0, unspent: 0 },
     player: { hp: 150, maxHp: 150, qi: 80, maxQi: 80, skills: [], buffs: {}, passive: '' },
     enemy: { hp: 100, maxHp: 100, acts: [], turn: 0 },
-    nodeIdx: 0, vnStep: 0, selSkill: null
+    nodeIdx: 0, vnStep: 0, selSkill: null, isScriptPaused: false // 【修复核心】增加剧情暂停标记
 };
 
 const ui = {
     show: (id) => { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById(id).classList.add('active'); },
     topBar: (show) => document.getElementById('topBar').style.display = show ? 'flex' : 'none',
     openModal: (id) => { document.getElementById(id).style.display = 'flex'; ui.updateStatsModal(); document.getElementById('btnStats').classList.remove('pulse'); },
-    closeModal: (id) => { document.getElementById(id).style.display = 'none'; game.updateUI(); },
+    closeModal: (id) => { 
+        document.getElementById(id).style.display = 'none'; 
+        game.updateUI(); 
+        // 【关键修复点】：如果是在剧情加点环节弹出的模态框，关闭后自动继续推进主线剧情
+        if (id === 'statsModal' && state.isScriptPaused) {
+            state.isScriptPaused = false;
+            game.runNode();
+        }
+    },
     float: (id, txt, type) => {
         let el = document.createElement('div'); el.className = 'floating-text'; el.textContent = txt;
         el.style.color = type==='dmg'?'#d65c5c':type==='heal'?'#6bba6b':'#d4af37';
@@ -334,13 +342,12 @@ const game = {
     },
     addStat: (k, v) => {
         if(v>0 && state.stats.unspent>0) { state.stats[k]++; state.stats.unspent--; }
-        else if(v<0 && state.stats[k]>DB.origins[state.origin]?.stats[k]) { state.stats[k]--; state.stats.unspent++; } // Can't go below origin base
+        else if(v<0 && state.stats[k]>DB.origins[state.origin]?.stats[k]) { state.stats[k]--; state.stats.unspent++; } 
         else if(v<0 && !DB.origins[state.origin] && state.stats[k]>0) { state.stats[k]--; state.stats.unspent++; }
         ui.updateStatsModal(); game.calcStats(); game.updateUI();
     },
     calcStats: () => {
         let opHp = state.player.maxHp, opQi = state.player.maxQi;
-        // 基础150血，80蓝。体魄+15，炁海+10
         state.player.maxHp = 150 + (state.stats.ti * 15);
         state.player.maxQi = 80 + (state.stats.qi * 10);
         if(state.player.maxHp > opHp) state.player.hp += (state.player.maxHp - opHp);
@@ -387,6 +394,9 @@ const game = {
             state.realmIdx = Math.min(DB.realms.length-1, state.realmIdx+1);
             document.getElementById('uiRealm').textContent = DB.realms[state.realmIdx];
             document.getElementById('btnStats').classList.add('pulse');
+            
+            // 【关键修复点】：将脚本标记为暂停，等待加点界面关闭后再继续
+            state.isScriptPaused = true; 
             ui.openModal('statsModal');
             state.nodeIdx++;
         }
@@ -402,7 +412,7 @@ const game = {
             });
         }
         else if(node.type === 'end') {
-            alert("感谢体验！核心框架已全部演示完毕。"); location.reload();
+            alert("感谢体验！太虚劫首测至此结束。"); location.reload();
         }
     }
 };
@@ -417,9 +427,8 @@ const vn = {
         if(line.bg) document.getElementById('vnBg').style.backgroundColor = line.bg;
         document.getElementById('vnChar').textContent = line.char;
         document.getElementById('vnSpeaker').textContent = line.name;
-        document.getElementById('vnText').innerHTML = ''; // Clear old text
+        document.getElementById('vnText').innerHTML = ''; 
         
-        // 打字机效果
         let text = line.text; let i = 0;
         let el = document.getElementById('vnText');
         function typeWriter() {
@@ -479,14 +488,13 @@ const battle = {
         ui.log(`施展 【${s.name}】。`);
 
         let dmg = s.dmg || 0;
-        if(dmg > 0) dmg = Math.floor(dmg * (1 + state.stats.shen * 0.05)); // 神识加伤
+        if(dmg > 0) dmg = Math.floor(dmg * (1 + state.stats.shen * 0.05)); 
 
         if(k === 'dao_punch') state.player.qi = Math.min(state.player.maxQi, state.player.qi + 10);
         if(k === 'taiqing') state.player.qi = Math.min(state.player.maxQi, state.player.qi + 20);
         if(s.buff) { state.player.buffs[s.buff] = (state.player.buffs[s.buff]||0) + s.stacks; ui.float('batPlayerAv', '+状态', 'log-buff'); }
         if(s.heal) { state.player.hp = Math.min(state.player.maxHp, state.player.hp + s.heal); ui.float('batPlayerAv', `+${s.heal}`, 'log-heal'); }
 
-        // Combo
         if(k === 'tianpeng' && state.player.buffs['jinguang']>0) { state.player.buffs['jinguang']--; dmg *= 2; ui.log('💥 金光化雷，威力翻倍！', 'log-dmg'); }
         if(k === 'yuanshen' && state.player.hp === state.player.maxHp) { dmg *= 2; ui.log('✨ 满血出窍，剑意通神！', 'log-buff'); }
 
@@ -498,7 +506,6 @@ const battle = {
             ui.log(`造成 <span class="log-dmg">${dmg}</span> 伤害。`);
         }
 
-        // 被动：武林世家(基础伤害提升)
         if(state.player.passive === 'martial' && s.type === 'attack') {
             let pDmg = 5; state.enemy.hp -= pDmg; ui.log(`[武林] 追加 ${pDmg} 物理伤害。`); ui.float('batEnemyAv', `-${pDmg}`, 'log-dmg');
         }
@@ -532,9 +539,8 @@ const battle = {
                 ui.log('☯️ 坎离交媾，化解致命一击并回血。', 'log-heal'); ui.float('batPlayerAv', `+${h}化解`, 'log-heal');
             }
             else {
-                eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.03)); // 根骨减伤
+                eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.03));
                 
-                // 被动：流浪乞儿残血减伤
                 if(state.player.passive === 'crisis' && state.player.hp < state.player.maxHp*0.3) {
                     eDmg = Math.floor(eDmg * 0.5); ui.log('【危机直觉】触发，伤害减半！', 'log-buff');
                 }
@@ -554,7 +560,6 @@ const battle = {
             ui.log(`敌人正在观察，未发动攻击。`);
         }
 
-        // 基础回蓝 + 书香门第被动
         let recQi = 5 + (state.player.passive === 'scholar' ? 5 : 0);
         state.player.qi = Math.min(state.player.maxQi, state.player.qi + recQi); 
         
@@ -568,7 +573,6 @@ const battle = {
     }
 };
 
-// 初始化启动
 ui.show('view-origin');
 </script>
 </body>
