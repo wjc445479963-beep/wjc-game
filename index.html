@@ -245,7 +245,7 @@
         <h3 style="color:#d65c5c; border-bottom:1px dashed #d65c5c;">💀 身死道消</h3>
         <p style="text-align:center; color:#a89f91; font-size:0.9rem; margin-bottom:20px;" id="deathMsg">你的修仙之途在此断绝...</p>
         <button class="btn-primary" style="width:100%; margin-bottom:10px; background:linear-gradient(90deg, #2a5a8a, #5a9ab8);" onclick="game.retryBattle()">时光溯回 (重试当前关卡)</button>
-        <button class="btn-secondary" style="width:100%;" onclick="location.reload()">重入轮回 (重新开始游戏)</button>
+        <button class="btn-secondary" style="width:100%;" onclick="game.resetProgress()">重入轮回 (重新开始游戏)</button>
     </div>
 </div>
 
@@ -360,8 +360,27 @@ let state = {
     origin: '', sect: '', realmIdx: 0, stats: { ti: 0, qi: 0, shen: 0, gen: 0, unspent: 0 },
     player: { hp: 150, maxHp: 150, qi: 80, maxQi: 80, skills: [], buffs: {}, passive: '', sectPass: '', cds: {} },
     enemy: { hp: 100, maxHp: 100, acts: [], turn: 0, buffs: {}, tags: [] },
-    nodeIdx: 0, vnStep: 0, selSkill: null, isScriptPaused: false
+    nodeIdx: 0, vnStep: 0, selSkill: null, isScriptPaused: false, battleResolved: false
 };
+
+const SAVE_KEY = 'xuanqiong-taixu-save-v1';
+function saveGame() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 1, state, savedAt: Date.now() })); }
+    catch { /* 私密模式或存储空间不足时仍允许当前回合继续 */ }
+}
+function loadGame() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+        if (!saved || saved.version !== 1 || !saved.state?.origin || !saved.state?.sect) return false;
+        const incoming = saved.state;
+        state = { ...state, ...incoming,
+            stats: { ...state.stats, ...(incoming.stats || {}) },
+            player: { ...state.player, ...(incoming.player || {}), buffs: { ...(incoming.player?.buffs || {}) }, cds: { ...(incoming.player?.cds || {}) } },
+            enemy: { ...state.enemy, ...(incoming.enemy || {}), buffs: { ...(incoming.enemy?.buffs || {}) }, tags: [...(incoming.enemy?.tags || [])] }
+        };
+        return true;
+    } catch { return false; }
+}
 
 const ui = {
     show: (id) => { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById(id).classList.add('active'); },
@@ -401,6 +420,7 @@ const game = {
         state.origin = key; let o = DB.origins[key];
         state.stats = { ...o.stats, unspent: 0 }; state.player.passive = o.passive;
         ui.show('view-sect');
+        saveGame();
     },
     setSect: (key) => {
         state.sect = key; state.player.skills = [...DB.sects[key].skills]; state.player.sectPass = DB.sects[key].pass;
@@ -409,19 +429,23 @@ const game = {
         state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi;
         document.getElementById('uiRealm').textContent = DB.realms[state.realmIdx];
         ui.topBar(true); game.updateUI(); game.runNode();
+        saveGame();
     },
     addStat: (k, v) => {
+        if(document.getElementById('view-battle').classList.contains('active')) return;
         if(v>0 && state.stats.unspent>0) { state.stats[k]++; state.stats.unspent--; }
         else if(v<0 && state.stats[k]>DB.origins[state.origin]?.stats[k]) { state.stats[k]--; state.stats.unspent++; } 
         else if(v<0 && !DB.origins[state.origin] && state.stats[k]>0) { state.stats[k]--; state.stats.unspent++; }
-        ui.updateStatsModal(); game.calcStats(); game.updateUI();
+        ui.updateStatsModal(); game.calcStats(); game.updateUI(); saveGame();
     },
     calcStats: () => {
         let opHp = state.player.maxHp, opQi = state.player.maxQi;
+        const hpRatio = opHp > 0 ? state.player.hp / opHp : 1;
+        const qiRatio = opQi > 0 ? state.player.qi / opQi : 1;
         state.player.maxHp = 150 + (state.realmIdx * 50) + (state.stats.ti * 20); 
         state.player.maxQi = 80 + (state.realmIdx * 20) + (state.stats.qi * 15);
-        if(state.player.maxHp > opHp) state.player.hp += (state.player.maxHp - opHp);
-        if(state.player.maxQi > opQi) state.player.qi += (state.player.maxQi - opQi);
+        state.player.hp = Math.min(state.player.maxHp, Math.max(0, Math.floor(state.player.maxHp * hpRatio)));
+        state.player.qi = Math.min(state.player.maxQi, Math.max(0, Math.floor(state.player.maxQi * qiRatio)));
     },
     updateUI: () => {
         document.getElementById('uiHpTxt').textContent = `${Math.floor(state.player.hp)}/${state.player.maxHp}`;
@@ -495,6 +519,7 @@ const game = {
             state.isScriptPaused = true; 
             ui.openModal('statsModal');
             state.nodeIdx++;
+            saveGame();
         }
         else if(node.type === 'upgrade_skills') {
             ui.show('view-upgrade');
@@ -503,7 +528,7 @@ const game = {
             pool.forEach(k => {
                 let s = DB.skills[k]; let div = document.createElement('div'); div.className = 'card';
                 div.innerHTML = `<h3>${s.name} <span class="tag golden">真元 -${s.cost}</span></h3><p>${s.desc}</p>`;
-                div.onclick = () => { state.player.skills.push(k); state.nodeIdx++; game.runNode(); };
+                div.onclick = () => { state.player.skills.push(k); state.nodeIdx++; saveGame(); game.runNode(); };
                 cDiv.appendChild(div);
             });
         }
@@ -529,6 +554,11 @@ const game = {
         } else {
             location.reload();
         }
+        saveGame();
+    },
+    resetProgress: () => {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
     }
 };
 
@@ -581,13 +611,14 @@ const vn = {
         }
         typeWriter();
     },
-    next: () => { state.vnStep++; vn.render(); }
+    next: () => { state.vnStep++; saveGame(); vn.render(); }
 };
 
 const battle = {
     init: (eData) => {
         ui.show('view-battle');
         state.enemy = { ...eData, maxHp: eData.hp, turn: 0, buffs: {}, tags: eData.tags || [] };
+        state.battleResolved = false;
         state.player.cds = {}; 
         document.getElementById('batEnemyName').textContent = eData.name;
         document.getElementById('batEnemyAv').textContent = eData.emoji;
@@ -598,6 +629,7 @@ const battle = {
         if(state.player.sectPass === 'qingwei') { state.player.buffs['yinni'] = 1; ui.log('【清微】自动施展隐匿！', 'log-buff'); }
 
         battle.cancelSkill(); battle.updateIntent();
+        document.getElementById('batEnemyIntent').style.display = 'block';
         let sBox = document.getElementById('batSkills'); sBox.innerHTML = '';
         state.player.skills.forEach(k => {
             let btn = document.createElement('button'); 
@@ -620,6 +652,7 @@ const battle = {
         }
     },
     selectSkill: (k) => {
+        if(state.battleResolved) return;
         state.selSkill = k; let s = DB.skills[k];
         document.getElementById('skillPanel').style.display = 'block';
         document.getElementById('skName').innerHTML = `${s.name} <span style="font-size:0.8rem;color:#5a9ab8;">真元 -${s.cost}</span>`;
@@ -628,7 +661,7 @@ const battle = {
     },
     cancelSkill: () => { state.selSkill = null; document.getElementById('skillPanel').style.display = 'none'; game.updateUI(); },
     castSkill: () => {
-        if(!state.selSkill) return;
+        if(!state.selSkill || state.battleResolved) return;
         let k = state.selSkill; let s = DB.skills[k];
         if(state.player.qi < s.cost || (state.player.cds[k]||0)>0) return;
         
@@ -643,6 +676,11 @@ const battle = {
             let statBonus = state.stats.shen * 0.10;  
             dmg = Math.floor(dmg * (1 + realmBonus + statBonus)); 
         }
+        if(state.player.buffs['chihuan'] > 0 && dmg > 0) {
+            dmg = Math.floor(dmg * 0.8);
+            state.player.buffs['chihuan']--;
+            ui.log('⚠️ 迟缓影响了这次术法的威力。', 'log-sys');
+        }
         
         if(state.player.sectPass === 'shenxiao' && s.tags?.includes('lei')) { dmg = Math.floor(dmg * 1.15); ui.log('【神霄】九天轰鸣，雷法威力更盛！'); }
         if(state.player.sectPass === 'longmen') dmg = Math.floor(dmg * (1 + (state.player.hp/state.player.maxHp)*0.2));
@@ -653,6 +691,11 @@ const battle = {
         
         if(s.buff) { state.player.buffs[s.buff] = (state.player.buffs[s.buff]||0) + s.stacks; ui.float('batPlayerAv', '+状态', 'log-buff'); }
         if(s.debuff) { state.enemy.buffs[s.debuff] = (state.enemy.buffs[s.debuff]||0) + s.stacks; ui.float('batEnemyAv', '-状态', 'log-sys'); }
+        if(k === 'fushui') {
+            delete state.player.buffs.liuxie;
+            delete state.player.buffs.chihuan;
+            ui.log('🌊 符水洗去流血与迟缓。', 'log-heal');
+        }
         if(s.heal) { state.player.hp = Math.min(state.player.maxHp, state.player.hp + s.heal); ui.float('batPlayerAv', `+${s.heal}`, 'log-heal'); }
 
         if(s.tags?.includes('lei')) ui.playFx('boxEnemy', 'fx-lightning', 500); 
@@ -719,12 +762,16 @@ const battle = {
             let pDmg = 5; state.enemy.hp -= pDmg; ui.log(`[武林] 追加 ${pDmg} 伤害。`); ui.float('batEnemyAv', `-${pDmg}`, 'log-dmg');
         }
 
+        saveGame();
         game.updateUI();
         if(state.enemy.hp <= 0) {
+            state.battleResolved = true;
             document.getElementById('batEnemyIntent').style.display='none';
+            document.querySelectorAll('.skill-btn').forEach(b=>b.disabled=true);
             ui.log('战斗胜利！调息片刻，状态回满。', 'log-sys');
             state.player.hp = state.player.maxHp; state.player.qi = state.player.maxQi; state.player.buffs = {}; game.updateUI();
-            setTimeout(() => { state.nodeIdx++; game.runNode(); }, 2000);
+            saveGame();
+            setTimeout(() => { state.nodeIdx++; saveGame(); game.runNode(); }, 2000);
         } else {
             document.querySelectorAll('.skill-btn').forEach(b=>b.disabled=true);
             setTimeout(battle.enemyTurn, 1000);
@@ -793,7 +840,7 @@ const battle = {
             }
             
             if(!blocked) {
-                if(state.player.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.player.buffs['chihuan']--; } 
+                if(state.enemy.buffs['chihuan'] > 0) { eDmg = Math.floor(eDmg * 0.8); state.enemy.buffs['chihuan']--; }
                 eDmg = Math.floor(eDmg * (1 - state.stats.gen * 0.04)); 
                 
                 if(state.player.passive === 'crisis' && state.player.hp < state.player.maxHp*0.3) {
@@ -820,7 +867,7 @@ const battle = {
                             ui.log('⚠️ 猛虎拳意霸道！强行震散了你 20 点真元！', 'log-sys');
                             ui.float('batPlayerAv', '-20蓝', 'dmg');
                         } else if(state.enemy.name === '嗜血狼妖' || state.enemy.name === '千年飞尸') {
-                            state.player.buffs['liuxie'] = (state.player.buffs['liuxie'] || 0) + 2;
+                            state.player.buffs['liuxie'] = (state.player.buffs['liuxie'] || 0) + 3;
                             ui.log('⚠️ 伤口被妖气感染！陷入 [流血] 状态。', 'log-sys');
                         } else if(state.enemy.name === '孤魂野鬼') {
                             state.player.buffs['chihuan'] = (state.player.buffs['chihuan'] || 0) + 2;
@@ -842,6 +889,12 @@ const battle = {
             ui.log(`敌人周身黑气缭绕，正在蓄力窥伺。`);
         }
 
+        if(state.player.hp <= 0) {
+            saveGame();
+            game.handleDeath('力竭不支，真灵溃散，身死道消...');
+            return;
+        }
+
         let recQi = 5 + (state.player.passive === 'scholar' ? 5 : 0);
         let recHp = Math.floor(state.player.maxHp * 0.02); 
         state.player.qi = Math.min(state.player.maxQi, state.player.qi + recQi); 
@@ -850,7 +903,7 @@ const battle = {
         
         for(let k in state.player.cds) if(state.player.cds[k] > 0) state.player.cds[k]--;
 
-        state.enemy.turn++; battle.updateIntent(); game.updateUI();
+        state.enemy.turn++; battle.updateIntent(); game.updateUI(); saveGame();
 
         if(state.player.hp <= 0) {
             game.handleDeath('力竭不支，真灵溃散，身死道消...');
@@ -860,7 +913,16 @@ const battle = {
     }
 };
 
-ui.show('view-origin');
+if (loadGame()) {
+    ui.topBar(true);
+    game.updateUI();
+    game.runNode();
+} else {
+    ui.show('view-origin');
+}
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
